@@ -40,6 +40,17 @@ export default function Services() {
             <ul>
               {activeService.features.map((feature) => <li key={feature}>{feature}</li>)}
             </ul>
+            <div className="service-production-artifact" aria-hidden="true">
+              <div className="artifact-sheet">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="artifact-timeline">
+                <i /><i /><i /><i /><i />
+              </div>
+              <div className="artifact-playhead" />
+            </div>
             <a href="#contact">Discuss this service <ArrowUpRight size={16} aria-hidden="true" /></a>
           </article>
         </div>

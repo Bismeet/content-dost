@@ -11,31 +11,36 @@ import FAQ from './components/FAQ';
 import ProjectEnquiry from './components/ProjectEnquiry';
 import Footer from './components/Footer';
 import { SmoothScrollProvider } from './providers/SmoothScrollProvider';
+import PostHeroEffects from './components/PostHeroEffects';
+import ShootingStarsBackground from './components/backgrounds/ShootingStarsBackground';
 
 export default function App() {
   return (
     <SmoothScrollProvider>
-      <div className="relative min-h-screen" style={{ backgroundColor: 'var(--ink)', color: 'var(--bone)' }}>
-
+      <div className="app-root">
         {/* Navigation */}
         <Navbar />
 
-        {/* Page Sections */}
         <main>
           <HeroScroll />
-          <TrustStrip />
-          <Services />
-          <SelectedWork />
-          <Process />
-          <Results />
-          <WhyContentDost />
-          <Testimonials />
-          <FAQ />
-          <ProjectEnquiry />
-        </main>
 
-        {/* Footer */}
-        <Footer />
+          <div className="post-hero-site">
+            <ShootingStarsBackground />
+            <PostHeroEffects />
+            <div className="post-hero-content">
+              <TrustStrip />
+              <Services />
+              <SelectedWork />
+              <Process />
+              <Results />
+              <WhyContentDost />
+              <Testimonials />
+              <FAQ />
+              <ProjectEnquiry />
+              <Footer />
+            </div>
+          </div>
+        </main>
       </div>
     </SmoothScrollProvider>
   );

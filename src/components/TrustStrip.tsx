@@ -14,7 +14,7 @@ export default function TrustStrip() {
 
   return (
     <section
-      className="relative w-full overflow-hidden select-none"
+      className="trust-strip-section relative w-full overflow-hidden select-none"
       style={{ padding: '28px 0', background: 'var(--ink-soft)', borderTop: '1px solid var(--border-neutral)', borderBottom: '1px solid var(--border-neutral)' }}
     >
       <div className="flex w-full overflow-hidden">
