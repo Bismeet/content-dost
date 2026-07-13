@@ -51,6 +51,7 @@ export interface TestimonialItem {
   content: string;
   achievement: string;
   avatarSeed: string;
+  shortQuote: string;
 }
 
 export interface FAQItem {
@@ -311,7 +312,8 @@ export const testimonialsData: TestimonialItem[] = [
     company: "Vance Tech Labs",
     content: "Content Dost changed how I look at content production. I record raw clips, and they return structured, high-pacing masterpieces. My channel grew by 150k subscribers in four months without me spending an extra minute editing.",
     achievement: "150K subscribers in 4 months",
-    avatarSeed: "marcus"
+    avatarSeed: "marcus",
+    shortQuote: "They return structured, high-pacing masterpieces. My channel grew by 150k subscribers in four months."
   },
   {
     id: "test-2",
@@ -320,7 +322,8 @@ export const testimonialsData: TestimonialItem[] = [
     company: "Sovereign Capital",
     content: "We needed a team that understood complex finance topics and could write hooks that didn't sound cheesy. The scripting capability at Content Dost is unmatched. They grasp strategy as well as they do editing.",
     achievement: "48 inbound pitch requests",
-    avatarSeed: "elena"
+    avatarSeed: "elena",
+    shortQuote: "The scripting capability at Content Dost is unmatched. They grasp strategy as well as they do editing."
   },
   {
     id: "test-3",
@@ -329,7 +332,8 @@ export const testimonialsData: TestimonialItem[] = [
     company: "The Devin Cole Show",
     content: "I've worked with a dozen freelance editors, but none could build a scalable workflow. Content Dost brought a complete content pipeline dashboard. It's organized, it's fast, and the sound design is cinema-grade.",
     achievement: "62% average view duration",
-    avatarSeed: "devin"
+    avatarSeed: "devin",
+    shortQuote: "Content Dost brought a complete content pipeline dashboard. It's organized, fast, and cinema-grade."
   }
 ];
 

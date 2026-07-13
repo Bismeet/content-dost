@@ -2,6 +2,7 @@ export interface ServiceItem {
   id: string;
   title: string;
   description: string;
+  shortDescription: string;
   features: string[];
 }
 
@@ -19,6 +20,7 @@ export interface PortfolioItem {
   };
   challenge: string;
   solution: string;
+  capabilities?: string[];
   mockVideoColor: string;
   duration: string;
   isConcept: boolean; // Mark portfolio sample / concept project
@@ -51,46 +53,59 @@ export const servicesData: ServiceItem[] = [
     id: "content-strategy",
     title: "Content Strategy",
     description: "Clear topics, hooks and formats built around what your audience actually wants to watch.",
+    shortDescription: "Clear direction for what to create, who it serves, and why it matters.",
     features: ["Audience intent mapping", "Format blueprints", "Hook validation frameworks"]
   },
   {
     id: "script-writing",
     title: "Scriptwriting",
     description: "Structured hooks, pacing and storytelling that give viewers a reason to stay.",
+    shortDescription: "Structured scripts designed to hook attention and hold it.",
     features: ["Hook variation design", "Retention pacing markers", "Visual direction notes"]
   },
   {
     id: "long-form-editing",
     title: "Long-Form Editing",
     description: "YouTube videos, interviews and podcasts shaped with purposeful pacing, sound and visual direction.",
+    shortDescription: "Raw footage shaped into polished, well-paced cinematic stories.",
     features: ["Cinematic sound orchestrations", "Context-driven B-roll", "Color grading"]
   },
   {
     id: "shorts-reels",
     title: "Shorts and Reels",
     description: "Vertical edits designed for fast attention without becoming noisy or disposable.",
+    shortDescription: "Sharp, platform-native edits built for immediate attention.",
     features: ["Custom visual packaging", "Attention-retaining transitions", "Kinetic subtitle design"]
   },
   {
     id: "podcast-production",
     title: "Podcast Production",
     description: "Clean multi-camera episodes, audio finishing and platform-ready short-form cutdowns.",
+    shortDescription: "Polished episodes with clean sound and natural conversational flow.",
     features: ["Multi-cam sound leveling", "Filler word removal", "Highlights package"]
   },
   {
     id: "visual-packaging",
     title: "Visual Packaging",
     description: "Thumbnails, titles, captions and supporting creative designed to make every release feel complete.",
+    shortDescription: "Thumbnails and visual systems designed to earn attention.",
     features: ["Click-through-rate layout strategy", "Title psychology variations", "Visual brand kits"]
+  },
+  {
+    id: "channel-management",
+    title: "Channel Management",
+    description: "Publishing, metadata optimization and distribution across YouTube, Spotify, Apple and social feeds.",
+    shortDescription: "Consistent publishing, optimisation, and day-to-day channel care.",
+    features: ["SEO & description packaging", "Multi-platform scheduling", "Analytics & performance reports"]
   }
 ];
 
 export const portfolioItems: PortfolioItem[] = [
   {
     id: "project-1",
-    title: "Authority Engine: Long-Form & Short-Form Repurposing Strategy",
+    title: "The Authority Engine",
     creator: "Internal Concept Project",
-    category: "Full-Scale Content System",
+    category: "FULL-SCALE CONTENT SYSTEM",
     platform: "Multi-Channel",
     stats: {
       metricLabel: "Consistency",
@@ -98,41 +113,44 @@ export const portfolioItems: PortfolioItem[] = [
       growth: "Optimized workflow pipeline"
     },
     challenge: "Traditional technical complex ideas lost in standard edits, resulting in low viewer retention.",
-    solution: "Designed narrative scripting hooks with custom edit blocks and pacing blueprints.",
+    solution: "A long-form content system designed to create one definitive story and repurpose it across formats.",
+    capabilities: ["Long-Form", "Short-Form", "Visual Packaging"],
     mockVideoColor: "from-[#d7ff00]/20 to-black",
     duration: "10 mins",
     isConcept: true
   },
   {
     id: "project-2",
-    title: "Visual Pacing & Narrative Restructuring Showcase",
+    title: "Creator Launch System",
     creator: "Internal Concept Project",
-    category: "Video Editing",
+    category: "CREATOR LAUNCH SYSTEM",
     platform: "YouTube",
     stats: {
       metricLabel: "Review Time",
       metricVal: "-50%",
       growth: "Streamlined cycles"
     },
-    challenge: "Long-form tech content dropping off quickly due to static visuals and dry explanations.",
-    solution: "Pacing rebuild using custom animations, script markers, and micro-animations.",
+    challenge: "Long-form tech content dropping off quickly due to dry explanations.",
+    solution: "A publishing roadmap built to establish unique brand identities and launch channel systems.",
+    capabilities: ["Brand System", "Channel Setup", "Publishing"],
     mockVideoColor: "from-[#3478f6]/20 to-black",
     duration: "8 mins",
     isConcept: true
   },
   {
     id: "project-3",
-    title: "Viral Hook Architecture for Personal Brands",
+    title: "Podcast Content Loop",
     creator: "Internal Concept Project",
-    category: "Shorts & Reels",
-    platform: "Reels",
+    category: "PODCAST CONTENT LOOP",
+    platform: "Podcast",
     stats: {
       metricLabel: "Delivery Speed",
       metricVal: "<24h",
       growth: "Platform-optimized"
     },
-    challenge: "High-value business lectures looking dry and generating zero organic platform footprint.",
-    solution: "Repackaged concepts into short hooks with premium typography and dynamic sound levels.",
+    challenge: "High-value business lectures generating zero organic platform footprint.",
+    solution: "A conversation repurposing engine converting master waveforms into distributed social clips.",
+    capabilities: ["Waveform Edit", "Clip Extraction", "Platform Loop"],
     mockVideoColor: "from-[#ff3b30]/20 to-black",
     duration: "60 secs",
     isConcept: true
@@ -143,38 +161,38 @@ export const processSteps: ProcessStep[] = [
   {
     step: "01",
     title: "Idea",
-    description: "Validate the raw thoughts and find the angle.",
-    detail: "We match raw notes against search trends and viewer patterns."
+    description: "Validate the raw thought and find the strongest angle.",
+    detail: "A focused direction shaped around audience and opportunity."
   },
   {
     step: "02",
     title: "Script",
-    description: "Write custom hooks and paced structures.",
-    detail: "Our writers build retention frameworks that keep people watching."
+    description: "Shape the idea into a clear, engaging narrative.",
+    detail: "A structured narrative ready for production."
   },
   {
     step: "03",
     title: "Produce",
-    description: "Record with clear visual and audio guidelines.",
-    detail: "Get simple setup blueprints so your files arrive clean."
+    description: "Capture the right material with direction and intent.",
+    detail: "Intentional footage and sound captured with clarity."
   },
   {
     step: "04",
     title: "Edit",
-    description: "Assemble with high-end, contemporary rhythm.",
-    detail: "Professional timeline cutting, styling, and cinematic audio design."
+    description: "Build rhythm, clarity and emotion from the raw footage.",
+    detail: "A polished sequence with rhythm, structure and emotion."
   },
   {
     step: "05",
     title: "Review",
-    description: "Refine frame-by-frame on our delivery app.",
-    detail: "Pin comments directly to specific timeline frames in one click."
+    description: "Collect precise feedback and move quickly toward approval.",
+    detail: "One organised feedback path from first cut to approval."
   },
   {
     step: "06",
     title: "Publish",
-    description: "Deploy with optimized titles and packaging.",
-    detail: "Optimized click-through-rates with custom thumbnail packages."
+    description: "Package and deliver the final content for the right platform.",
+    detail: "Finished content packaged and ready for release."
   }
 ];
 
@@ -221,27 +239,27 @@ export const testimonialsData: TestimonialItem[] = [
 export const faqData: FAQItem[] = [
   {
     question: "What kind of content do you create?",
-    answer: "We focus on long-form YouTube videos, podcasts, vertical short clips (Reels, TikToks, Shorts), scripting, thumbnails, and complete content distribution systems."
+    answer: "We create long-form videos, short-form clips, podcast edits, visual packaging, and content systems built for platforms like YouTube, Instagram, and more."
   },
   {
     question: "Can you help with strategy and scripts as well as editing?",
-    answer: "Yes, we shape the concepts from the initial thought. We write structured hooks, design scripting blueprints, and handle the complete editing process."
+    answer: "Yes. We can support the full flow — from content direction and scripting to editing, packaging, and rollout."
   },
   {
     question: "Do you work with creators, brands or both?",
-    answer: "We work with high-growth creators, personal brands, and businesses looking to build compounding authority online."
+    answer: "Both. We work with creators building a stronger content engine and brands looking for sharper, more watchable media."
   },
   {
     question: "How does the review process work?",
-    answer: "You receive a frame-by-frame review workspace link. You can pause the edit at any point, write comments directly on the screen, and our editors implement the fixes."
+    answer: "We keep reviews structured and simple. Once the first version is delivered, we gather feedback, refine the edit, and move quickly toward final delivery."
   },
   {
     question: "Can one long video be turned into multiple short clips?",
-    answer: "Absolutely. We extract the highest impact hooks, crop to 9:16 layout, write vertical-friendly hooks, and format them with premium subtitles and sound."
+    answer: "Absolutely. One strong long-form piece can often be repurposed into multiple shorts, reels, teasers, or social cutdowns."
   },
   {
     question: "How do we start a project?",
-    answer: "Scroll down to our Project Enquiry form, pick your budget and needs, send a submission, and we will get back to you with onboarding steps."
+    answer: "Start by filling out the contact form with your goals, content needs, and timelines. From there, we review the brief and reach out with the best next step."
   }
 ];
 

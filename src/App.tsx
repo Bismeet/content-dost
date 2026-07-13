@@ -1,6 +1,5 @@
 import Navbar from './components/Navbar';
 import HeroScroll from './components/HeroScroll';
-import TrustStrip from './components/TrustStrip';
 import Services from './components/Services';
 import SelectedWork from './components/SelectedWork';
 import Process from './components/Process';
@@ -28,7 +27,6 @@ export default function App() {
             <ShootingStarsBackground />
             <PostHeroEffects />
             <div className="post-hero-content">
-              <TrustStrip />
               <Services />
               <SelectedWork />
               <Process />

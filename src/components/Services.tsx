@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { servicesData } from '../content/siteContent';
+import { ServiceVisualStage } from './ServiceVisuals';
 
 export default function Services() {
   const [activeTab, setActiveTab] = useState(0);
   const activeService = servicesData[activeTab];
 
   return (
-    <section id="services" className="scroll-mt-20" style={{ padding: 'clamp(5rem, 10vw, 8rem) 0', background: 'var(--ink)', borderBottom: '1px solid var(--border-neutral)' }}>
+    <section id="services" className="services-section-atelier" style={{ padding: 'clamp(5rem, 10vw, 8rem) 0', background: 'var(--ink)', borderBottom: '1px solid var(--border-neutral)' }}>
       <div className="container">
         <div className="max-w-3xl mb-16" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <span className="section-eyebrow">Services</span>
@@ -22,6 +23,7 @@ export default function Services() {
                 key={service.id}
                 type="button"
                 role="tab"
+                id={`tab-${service.id}`}
                 aria-selected={activeTab === index}
                 aria-controls="service-detail"
                 className={`service-index-item ${activeTab === index ? 'service-index-item--active' : ''}`}
@@ -33,25 +35,26 @@ export default function Services() {
             ))}
           </div>
 
-          <article id="service-detail" role="tabpanel" className="service-detail" key={activeService.id}>
-            <span className="service-detail-number">0{activeTab + 1}</span>
-            <h3>{activeService.title}</h3>
-            <p>{activeService.description}</p>
-            <ul>
-              {activeService.features.map((feature) => <li key={feature}>{feature}</li>)}
-            </ul>
-            <div className="service-production-artifact" aria-hidden="true">
-              <div className="artifact-sheet">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="artifact-timeline">
-                <i /><i /><i /><i /><i />
-              </div>
-              <div className="artifact-playhead" />
+          <article id="service-detail" role="tabpanel" className="service-detail animate-panel-fade" aria-labelledby={`tab-${activeService.id}`}>
+            {/* Top-left aligned title and short description */}
+            <div className="service-detail-header">
+              <h3 className="service-detail-title-left" key={`title-${activeService.id}`}>{activeService.title}</h3>
+              <p className="service-detail-description" key={`desc-${activeService.id}`}>
+                {activeService.shortDescription}
+              </p>
             </div>
-            <a href="#contact">Discuss this service <ArrowUpRight size={16} aria-hidden="true" /></a>
+
+            {/* Middle area: large visual stage shifted slightly right */}
+            <div className="service-detail-visual-row">
+              <ServiceVisualStage activeTab={activeTab} activeService={activeService} />
+            </div>
+
+            {/* Bottom footer: CTA aligned right */}
+            <div className="service-detail-footer">
+              <a href="#contact" className="service-detail-cta-right">
+                Discuss this service <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+            </div>
           </article>
         </div>
       </div>
