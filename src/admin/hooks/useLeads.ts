@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../../lib/api-client.js';
 import type { Lead, LeadsResponse, LeadStats, LeadStatsResponse } from '../types/lead.js';
 
@@ -25,7 +25,17 @@ export function useLeads(initialFilters: {
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const fetchLeads = useCallback(async () => {
+    // Abort the previous request if it's still running
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // Create new abort controller
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       setIsLoading(true);
       setError(null);
@@ -40,15 +50,23 @@ export function useLeads(initialFilters: {
       params.append('order', filters.order);
       if (filters.trash) params.append('trash', filters.trash);
 
-      const res = await apiFetch<LeadsResponse>(`/api/admin/leads?${params.toString()}`);
+      const res = await apiFetch<LeadsResponse>(`/api/admin/leads?${params.toString()}`, {
+        signal: controller.signal,
+      });
       if (res.success) {
         setLeads(res.data);
         setPagination(res.pagination);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch leads');
+      // Don't set error state if it was aborted intentionally
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Failed to fetch leads');
+      }
     } finally {
-      setIsLoading(false);
+      // Only set loading to false if this was the latest controller
+      if (abortControllerRef.current === controller) {
+        setIsLoading(false);
+      }
     }
   }, [filters]);
 
@@ -194,6 +212,14 @@ export function useLeads(initialFilters: {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return {
     leads,

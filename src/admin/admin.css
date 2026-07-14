@@ -1,0 +1,102 @@
+.admin-root {
+  --admin-bg: #080908;
+  --admin-surface: #0d0f0c;
+  --admin-surface-raised: #121510;
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-text: #f2f4ef;
+  --admin-muted: #92988d;
+  --admin-accent: #d7ff32;
+  --admin-accent-hover: #c4ec23;
+  --admin-danger: #ef6a63;
+  --admin-danger-hover: #e05c55;
+  --admin-success: #62c48d;
+  --admin-focus: rgba(215, 255, 50, 0.35);
+
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* Custom Scrollbar */
+.admin-root ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.admin-root ::-webkit-scrollbar-track {
+  background: var(--admin-bg);
+}
+.admin-root ::-webkit-scrollbar-thumb {
+  background: var(--admin-border);
+  border-radius: 3px;
+}
+.admin-root ::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-muted);
+}
+
+/* Focus styles */
+.admin-root *:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
+/* Animations */
+@keyframes adminPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-root * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.admin-skeleton {
+  background: linear-gradient(90deg, #121510 25%, #1d2119 50%, #121510 75%);
+  background-size: 200% 100%;
+  animation: adminShimmer 1.5s infinite linear;
+}
+
+@keyframes adminShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.admin-drawer-open {
+  overflow: hidden;
+}
+
+.admin-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10000;
+  max-width: 360px;
+  width: calc(100% - 48px);
+}
+
+@media (max-width: 768px) {
+  .admin-toast-container {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: none;
+  }
+}
