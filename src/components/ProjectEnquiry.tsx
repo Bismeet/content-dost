@@ -417,13 +417,12 @@ export default function ProjectEnquiry() {
 
                     {/* Dropdown Menu Overlay */}
                     {isDropdownOpen && (
-                      <div className="absolute z-50 left-0 right-0 mt-1 bg-[#121510] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                      <div className="absolute z-50 left-0 right-0 w-full mt-1 bg-[#121510] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                         <div className="p-1.5 space-y-0.5" role="listbox" aria-label="Services list">
                           {needsOptions.map((opt) => {
                             const isSelected = selectedNeeds.includes(opt.label);
                             return (
-                              <button
-                                type="button"
+                              <div
                                 key={opt.id}
                                 onClick={() => toggleNeed(opt.label)}
                                 role="option"
@@ -444,7 +443,7 @@ export default function ProjectEnquiry() {
                                     </svg>
                                   )}
                                 </div>
-                              </button>
+                              </div>
                             );
                           })}
                         </div>
