@@ -57,7 +57,7 @@ export default function Navbar() {
         },
         {
           threshold: 0,
-          rootMargin: '-8px 0px 0px 0px',
+          rootMargin: '8px 0px 0px 0px',
         }
       );
       observer.observe(sentinel);
