@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import SoftAurora from './reactbits/SoftAurora/SoftAurora';
 
 export default function Footer() {
   const footerRef = useRef<HTMLElement>(null);
   const wordmarkRef = useRef<HTMLDivElement>(null);
+  const [isIntersecting, setIsIntersecting] = useState(false);
   
   // Parallax target/current states for pointer and scroll
   const stateRef = useRef({
@@ -17,7 +19,6 @@ export default function Footer() {
     bounds: null as DOMRect | null,
   });
 
-
   useEffect(() => {
     const el = footerRef.current;
     if (!el) return;
@@ -29,6 +30,7 @@ export default function Footer() {
     // Detect intersection to pause animation off-screen
     const observer = new IntersectionObserver(
       ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
         stateRef.current.isIntersecting = entry.isIntersecting;
         if (entry.isIntersecting) {
           el.classList.add('cinematic-footer--active');
@@ -136,11 +138,22 @@ export default function Footer() {
 
   return (
     <footer ref={footerRef} className="cinematic-footer">
-      <div className="cinematic-footer__atmosphere" aria-hidden="true">
-        {/* Layered custom blurs/ribbons */}
-        <div className="cinematic-footer__ribbon cinematic-footer__ribbon--1" />
-        <div className="cinematic-footer__ribbon cinematic-footer__ribbon--2" />
-        <div className="cinematic-footer__ribbon cinematic-footer__ribbon--3" />
+      <div className="cinematic-footer__soft-aurora" aria-hidden="true">
+        <SoftAurora
+          paused={!isIntersecting}
+          speed={2.0}
+          scale={1.2}
+          brightness={1.15}
+          color1="#D8751B" // Warm Amber
+          color2="#E39A34" // Muted Gold/Amber
+          noiseFrequency={2.3}
+          noiseAmplitude={0.95}
+          bandHeight={0.52}
+          bandSpread={1.4}
+          layerOffset={3.2}
+          enableMouseInteraction={!window.matchMedia('(pointer: coarse)').matches}
+          mouseInfluence={0.05}
+        />
       </div>
 
       <div className="cinematic-footer__content">

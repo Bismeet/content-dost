@@ -1,0 +1,76 @@
+.border-glow-container {
+  position: relative;
+}
+
+.border-glow-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity var(--glow-fade-duration, 180ms) ease;
+  border: var(--glow-border-width, 1.2px) solid transparent;
+  background: radial-gradient(
+    circle var(--glow-radius, 120px) at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    #F2BE57 0%,
+    #F08A24 25%,
+    #D94A0A 55%,
+    #5A1A05 80%,
+    transparent 100%
+  ) border-box;
+  -webkit-mask: 
+    linear-gradient(#fff, #fff) padding-box, 
+    linear-gradient(#fff, #fff) border-box;
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+}
+
+/* Fallback for browsers that don't support mask-composite: we let the transparent padding-box fall back to a dark base */
+@supports not (mask-composite: exclude) {
+  .border-glow-overlay {
+    background: 
+      linear-gradient(rgba(10, 10, 8, 0.95), rgba(10, 10, 8, 0.95)) padding-box,
+      radial-gradient(
+        circle var(--glow-radius, 120px) at var(--mouse-x, 0px) var(--mouse-y, 0px),
+        #F2BE57 0%,
+        #F08A24 25%,
+        #D94A0A 55%,
+        #5A1A05 80%,
+        transparent 100%
+      ) border-box;
+  }
+}
+
+.border-glow-active .border-glow-overlay,
+.border-glow-container:focus-within .border-glow-overlay {
+  opacity: var(--glow-active-opacity, 0.65);
+}
+
+/* Intensity variations */
+.border-glow-intensity-subtle {
+  --glow-active-opacity: 0.45;
+  --glow-radius: 90px;
+}
+
+.border-glow-intensity-standard {
+  --glow-active-opacity: 0.65;
+  --glow-radius: 130px;
+}
+
+.border-glow-intensity-strong {
+  --glow-active-opacity: 0.8;
+  --glow-radius: 170px;
+}
+
+/* Focus styles for keyboard accessibility */
+.border-glow-container:focus-visible {
+  outline: 2px solid rgba(242, 190, 87, 0.85) !important;
+  outline-offset: 3px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .border-glow-overlay {
+    transition: none !important;
+  }
+}
