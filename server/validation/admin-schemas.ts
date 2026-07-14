@@ -59,7 +59,7 @@ export const leadsQuerySchema = z
         message: `Search query cannot exceed ${MAX_LENGTHS.searchQuery} characters`,
       }),
     sort: z
-      .enum(['created_at', 'status', 'name', 'email', 'budget', 'company', 'deleted_at'])
+      .enum(['created_at', 'status', 'name', 'email', 'company', 'deleted_at'])
       .optional()
       .default('created_at'),
     order: z

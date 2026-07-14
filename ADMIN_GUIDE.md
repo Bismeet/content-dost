@@ -26,7 +26,7 @@ Upon successful login, you are redirected to `/admin/leads`, which displays:
 ### 2.2 Leads Filter & Controls
 - **Search Bar**: Search database fields instantly by client name, email, or company name. The query is safely escaped on the server to prevent wildcard injections.
 - **Status Filter**: Dropdown menu to filter leads by their current triage stage (e.g. show only `new` leads).
-- **Table Headers**: Click any column header (Date, Name, Email, Company, Budget, Status) to toggle sorting in ascending or descending order. Sorted values are verified against a strict allowlist.
+- **Table Headers**: Click any column header (Date, Name, Email, Company, Status) to toggle sorting in ascending or descending order. Sorted values are verified against a strict allowlist.
 - **Sync Button**: Refresh current listings manually.
 - **Export CSV**: Download a spreadsheet of your leads applying all current filters.
 
@@ -64,7 +64,7 @@ Clicking any row in the table opens the **Lead Details** side panel:
 
 ### 4.2 Restoring a Lead
 - Select a lead in the **Trash** list and click the **Restore Lead** button.
-- A confirmation dialog will appear. Confirming will clear the trash flags and return the lead to the active dashboard. All original status designations, budgets, and internal notes are fully preserved.
+- A confirmation dialog will appear. Confirming will clear the trash flags and return the lead to the active dashboard. All original status designations and internal notes are fully preserved.
 
 ### 4.3 Permanent Deletion
 - To permanently delete a lead, click **Permanently Delete** inside the Trash detail panel.

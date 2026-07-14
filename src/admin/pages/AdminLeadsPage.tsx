@@ -474,7 +474,6 @@ export default function AdminLeadsPage() {
                     { label: 'Name', key: 'name' },
                     { label: 'Email', key: 'email' },
                     { label: 'Company', key: 'company' },
-                    { label: 'Budget', key: 'budget' },
                     { label: 'Status', key: 'status' },
                   ].map((col) => {
                     // Check if this column is the active sorting field
@@ -542,7 +541,6 @@ export default function AdminLeadsPage() {
                         <td style={{ padding: '12px 16px', fontWeight: 500, color: '#f5f5ef' }}>{lead.name}</td>
                         <td style={{ padding: '12px 16px' }}>{lead.email}</td>
                         <td style={{ padding: '12px 16px', color: '#aaad9f' }}>{lead.company || '-'}</td>
-                        <td style={{ padding: '12px 16px', fontFamily: 'monospace' }}>{lead.budget}</td>
                         <td style={{ padding: '12px 16px' }}>
                           <span
                             style={{
@@ -706,13 +704,6 @@ export default function AdminLeadsPage() {
                   Website / Profile URL
                 </span>
                 <div>{renderProfileUrl(activeLead.profile_url)}</div>
-              </div>
-
-              <div>
-                <span style={{ color: '#686d61', textTransform: 'uppercase', fontSize: '9px', fontFamily: 'monospace', display: 'block', marginBottom: '4px' }}>
-                  Budget Tier
-                </span>
-                <span style={{ fontFamily: 'monospace' }}>{activeLead.budget}</span>
               </div>
 
               <div>

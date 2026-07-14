@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { BUDGET_TIERS, SERVICE_NAMES, MAX_LENGTHS } from '../../shared/lead-constants.js';
+import { SERVICE_NAMES, MAX_LENGTHS } from '../../shared/lead-constants.js';
 
-const allowedBudgets = BUDGET_TIERS.map((t) => t.value) as [string, ...string[]];
 const allowedServices = SERVICE_NAMES.map((s) => s.label) as [string, ...string[]];
 
 export const leadSubmitSchema = z
@@ -44,9 +43,6 @@ export const leadSubmitSchema = z
       .optional()
       .nullable()
       .or(z.literal('')),
-    budget: z.enum(allowedBudgets, {
-      message: 'Please select a valid budget tier',
-    }),
     needs: z
       .array(z.enum(allowedServices))
       .min(1, 'Please select at least one service')

@@ -37,7 +37,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     // Select deleted_at as well to support Trash export columns
     let dbQuery = supabaseAdmin
       .from('leads')
-      .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, source, created_at, deleted_at')
+      .select('id, name, email, company, profile_url, needs, project_details, status, internal_notes, source, created_at, deleted_at')
       .limit(10000);
 
     // Apply trash filter
@@ -80,7 +80,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       'Email',
       'Company',
       'Profile URL',
-      'Budget Tier',
       'Needs / Services',
       'Project Details',
       'Status',
@@ -100,7 +99,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         lead.email,
         lead.company || '',
         lead.profile_url || '',
-        lead.budget,
         lead.needs,
         lead.project_details,
         lead.status,

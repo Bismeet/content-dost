@@ -1,12 +1,3 @@
-export const BUDGET_TIERS = [
-  { label: 'Less than $1,500 / mo', value: '<1500' },
-  { label: '$1,500 - $3,000 / mo', value: '1500-3000' },
-  { label: '$3,000 - $5,000 / mo', value: '3000-5000' },
-  { label: 'More than $5,000 / mo', value: '>5000' },
-] as const;
-
-export type BudgetTierValue = typeof BUDGET_TIERS[number]['value'];
-
 export const SERVICE_NAMES = [
   { label: 'Content Strategy', id: 'need-strategy' },
   { label: 'Scriptwriting', id: 'need-scripts' },

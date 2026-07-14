@@ -33,7 +33,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const supabaseAdmin = getSupabaseAdminClient();
     let dbQuery = supabaseAdmin
       .from('leads')
-      .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, source, created_at, updated_at, deleted_at', { count: 'exact' });
+      .select('id, name, email, company, profile_url, needs, project_details, status, internal_notes, source, created_at, updated_at, deleted_at', { count: 'exact' });
 
     // Apply trash filter
     if (trash === 'trashed') {

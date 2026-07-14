@@ -38,7 +38,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     try {
       const { data: lead, error: dbError } = await supabaseAdmin
         .from('leads')
-        .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, source, created_at, updated_at, deleted_at')
+        .select('id, name, email, company, profile_url, needs, project_details, status, internal_notes, source, created_at, updated_at, deleted_at')
         .eq('id', id)
         .single();
 
@@ -91,7 +91,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         .from('leads')
         .update(finalUpdate)
         .eq('id', id)
-        .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, created_at, updated_at, deleted_at')
+        .select('id, name, email, company, profile_url, needs, project_details, status, internal_notes, created_at, updated_at, deleted_at')
         .single();
 
       if (dbError || !updatedLead) {

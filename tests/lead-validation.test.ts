@@ -7,7 +7,6 @@ describe('Public Lead Submission Schema Validation', () => {
     email: 'jane@example.com',
     company: 'Acme Corp',
     profileUrl: 'https://linkedin.com/in/janedoe',
-    budget: '<1500',
     needs: ['Content Strategy', 'Scriptwriting'],
     details: 'Looking to produce 10 high-retention short videos per month.',
     website: '', // Honeypot (empty)
@@ -55,8 +54,8 @@ describe('Public Lead Submission Schema Validation', () => {
     }
   });
 
-  it('rejects invalid budget values', () => {
-    const payload = { ...validPayload, budget: '1000000' };
+  it('rejects payload containing budget because the schema is strict', () => {
+    const payload = { ...validPayload, budget: '<1500' };
     const res = leadSubmitSchema.safeParse(payload);
     expect(res.success).toBe(false);
   });

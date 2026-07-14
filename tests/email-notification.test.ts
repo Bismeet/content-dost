@@ -39,7 +39,6 @@ describe('Email Notification Service', () => {
     email: 'john@example.com',
     company: 'Acme Corp',
     profileUrl: 'https://linkedin.com/in/johndoe',
-    budget: '<1500',
     needs: ['Content Strategy'],
     projectDetails: 'Need short reels edited.',
     createdAt: '2026-07-14T12:00:00Z',

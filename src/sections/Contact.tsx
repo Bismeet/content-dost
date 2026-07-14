@@ -10,7 +10,6 @@ export default function Contact() {
     brief: '',
   });
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [selectedBudget, setSelectedBudget] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -22,13 +21,6 @@ export default function Contact() {
     "Long-to-Short Repurposing",
     "Thumbnail Packaging",
     "Personal Branding"
-  ];
-
-  const budgetOpts = [
-    "Under $2,000 / mo",
-    "$2,000 - $5,000 / mo",
-    "$5,000 - $10,000 / mo",
-    "$10,050+ / mo"
   ];
 
   const handleServiceToggle = (service: string) => {
@@ -138,7 +130,7 @@ export default function Contact() {
                     QUEUE_STATE: BRIEF_SAVED // SLA_TIMER_STARTED
                   </div>
                   <button
-                    onClick={() => { setSubmitted(false); setFormState({ name:'', email:'', social:'', brief:'' }); setSelectedServices([]); setSelectedBudget(''); }}
+                    onClick={() => { setSubmitted(false); setFormState({ name:'', email:'', social:'', brief:'' }); setSelectedServices([]); }}
                     className="btn-secondary text-xs py-2 px-4 cursor-pointer"
                   >
                     Submit Another Brief
@@ -210,29 +202,7 @@ export default function Contact() {
                     </div>
                   </div>
 
-                  {/* Budget Choice Pills */}
-                  <div className="space-y-3 text-left">
-                    <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider block select-none">Estimated Monthly Content Budget</label>
-                    <div className="flex flex-wrap gap-2">
-                      {budgetOpts.map((budget) => {
-                        const isSelected = selectedBudget === budget;
-                        return (
-                          <button
-                            type="button"
-                            key={budget}
-                            onClick={() => setSelectedBudget(budget)}
-                            className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-[#FF4D00]/10 border-[#FF4D00]/40 text-[#FF6A00] shadow-sm'
-                                : 'bg-[#020202] border-zinc-900 text-zinc-400 hover:border-zinc-800'
-                            }`}
-                          >
-                            {budget}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+
 
                   {/* Project Brief TextArea */}
                   <div className="space-y-2 text-left">

@@ -63,7 +63,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         email: payload.email,
         company: payload.company || null,
         profile_url: payload.profileUrl || null,
-        budget: payload.budget,
         needs: payload.needs,
         project_details: payload.details,
         ip_hash: ipHash,
@@ -71,7 +70,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         status: 'new',
         source: 'website',
       })
-      .select('id, name, email, company, profile_url, budget, needs, project_details, created_at')
+      .select('id, name, email, company, profile_url, needs, project_details, created_at')
       .single();
 
     if (dbError || !insertedLead) {
@@ -85,7 +84,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       email: insertedLead.email,
       company: insertedLead.company,
       profileUrl: insertedLead.profile_url,
-      budget: insertedLead.budget,
       needs: insertedLead.needs,
       projectDetails: insertedLead.project_details,
       createdAt: insertedLead.created_at,

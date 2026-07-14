@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, Lock } from 'lucide-react';
 
-import { BUDGET_TIERS, SERVICE_NAMES } from '../../shared/lead-constants';
+import { SERVICE_NAMES } from '../../shared/lead-constants';
 
-const budgetOptions = BUDGET_TIERS;
 const needsOptions = SERVICE_NAMES;
 
 // Custom Inline SVG Brand Icons to avoid version conflicts in lucide-react
@@ -83,7 +82,6 @@ export default function ProjectEnquiry() {
     email: '',
     company: '',
     profileUrl: '',
-    budget: '',
     details: '',
     website: '', // honeypot
   });
@@ -121,7 +119,6 @@ export default function ProjectEnquiry() {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    if (!formData.budget) newErrors.budget = 'Please select an estimated budget';
     if (!formData.details.trim()) newErrors.details = 'Please tell us a bit about your project';
     if (selectedNeeds.length === 0) newErrors.needs = 'Please select at least one service';
 
@@ -148,7 +145,6 @@ export default function ProjectEnquiry() {
           email: formData.email,
           company: formData.company || undefined,
           profileUrl: formData.profileUrl || undefined,
-          budget: formData.budget,
           details: formData.details,
           needs: selectedNeeds,
           website: formData.website,
@@ -165,7 +161,6 @@ export default function ProjectEnquiry() {
         email: '',
         company: '',
         profileUrl: '',
-        budget: '',
         details: '',
         website: '',
       });
@@ -363,28 +358,6 @@ export default function ProjectEnquiry() {
                 <div className="form-group-section">
                   <h4 className="form-group-title">03 — Scope</h4>
                   <div className="grid grid-cols-1 gap-6">
-                    {/* Estimated Budget (Select) */}
-                    <div className="space-y-2">
-                      <label htmlFor="budget" className="block text-[10px] uppercase tracking-wider font-mono text-white">
-                        Estimated Monthly Budget *
-                      </label>
-                      <select
-                        id="budget"
-                        name="budget"
-                        value={formData.budget}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 bg-[var(--ink-soft)] border rounded-lg text-xs font-mono text-white focus:outline-none focus:border-[var(--lime)] transition-colors appearance-none cursor-pointer ${
-                          errors.budget ? 'border-[#ff3b30]' : 'border-white/5'
-                        }`}
-                      >
-                        <option value="" disabled>Select budget tier...</option>
-                        {budgetOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                      {errors.budget && <span className="block text-[10px] text-[#ff3b30] font-mono">{errors.budget}</span>}
-                    </div>
-
                     {/* Project Details */}
                     <div className="space-y-2">
                       <label htmlFor="details" className="block text-[10px] uppercase tracking-wider font-mono text-white">

@@ -26,7 +26,11 @@ This guide provides step-by-step instructions to configure the Supabase database
 6. Copy the entire contents of the soft-delete/trash migration file located in this repository at:
    [003_add_lead_trash.sql](file:///c:/Users/as360/Documents/anunay%20landing%20page/supabase/migrations/003_add_lead_trash.sql)
 7. Paste it into the editor window and click **Run**.
-8. Verify both queries run successfully. This sets up the table structure, indexes, soft-delete fields, and triggers.
+8. Click **New Query** again to create another blank editor.
+9. Copy the entire contents of the budget removal migration file located in this repository at:
+   [004_remove_budget_from_leads.sql](file:///c:/Users/as360/Documents/anunay%20landing%20page/supabase/migrations/004_remove_budget_from_leads.sql)
+10. Paste it into the editor window and click **Run**.
+11. Verify all migrations execute successfully, and confirm that the `budget` column no longer exists in `public.leads`. This sets up the database table structure, indexes, soft-delete fields, triggers, and drops the budget field constraint.
 
 ### Step 1.3: Disable Public User Signup
 1. Navigate to **Authentication** (User icon in left sidebar) -> **Providers** -> **Email**.

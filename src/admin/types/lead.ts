@@ -6,7 +6,6 @@ export interface Lead {
   email: string;
   company: string | null;
   profile_url: string | null;
-  budget: string;
   needs: string[];
   project_details: string;
   status: LeadStatus;

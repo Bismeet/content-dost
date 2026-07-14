@@ -8,7 +8,6 @@ interface LeadNotificationData {
   email: string;
   company?: string | null;
   profileUrl?: string | null;
-  budget: string;
   needs: string[];
   projectDetails: string;
   createdAt: string;
@@ -66,7 +65,6 @@ export async function sendLeadNotificationEmail(
     const safeEmail = escapePlainText(lead.email);
     const safeCompany = lead.company ? escapePlainText(lead.company) : 'N/A';
     const safeProfileUrl = lead.profileUrl ? escapePlainText(lead.profileUrl) : 'N/A';
-    const safeBudget = escapePlainText(lead.budget);
     const safeNeeds = lead.needs.map(escapePlainText).join(', ');
     const safeDetails = escapePlainText(lead.projectDetails);
     const safeDate = escapePlainText(lead.createdAt);
@@ -84,7 +82,6 @@ Company: ${safeCompany}
 Social Profile/Website: ${safeProfileUrl}
 
 -- Project Details --
-Budget Tier: ${safeBudget}
 Requested Services: ${safeNeeds}
 
 Project Description:
