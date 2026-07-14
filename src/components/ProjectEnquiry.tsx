@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CheckCircle2, Lock } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CheckCircle2, Lock, ChevronDown } from 'lucide-react';
 
 import { SERVICE_NAMES } from '../../shared/lead-constants';
 
@@ -92,6 +92,21 @@ export default function ProjectEnquiry() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -374,38 +389,68 @@ export default function ProjectEnquiry() {
                 {/* GROUP 2: WHAT ARE WE BUILDING */}
                 <div className="form-group-section">
                   <h4 className="form-group-title">02 — What Are We Building?</h4>
-                  <div className="space-y-3">
+                  <div className="space-y-3 relative" ref={dropdownRef}>
                     <span className="block text-[10px] uppercase tracking-wider font-mono text-white">
                       Select required services *
                     </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="group" aria-label="Services checklist">
-                      {needsOptions.map((opt) => {
-                        const isSelected = selectedNeeds.includes(opt.label);
-                        return (
-                          <button
-                            type="button"
-                            key={opt.id}
-                            onClick={() => toggleNeed(opt.label)}
-                            role="checkbox"
-                            aria-checked={isSelected}
-                            className={`p-3 border rounded-lg text-left text-[11px] font-mono transition-all cursor-pointer ${
-                              isSelected 
-                                ? 'bg-[var(--lime)]/10 border-[var(--lime)]/30 text-white shadow-[0_0_10px_rgba(244,185,66,0.05)]' 
-                                : 'bg-black/20 border-white/5 text-[var(--muted)] hover:border-white/10'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
-                                isSelected ? 'bg-[var(--lime)] border-[var(--lime)] scale-110' : 'border-white/20 bg-transparent'
-                              }`}>
-                                {isSelected && <span className="w-1.5 h-1.5 bg-[var(--ink)] rounded-full" />}
-                              </div>
-                              {opt.label}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    
+                    {/* Dropdown Trigger Button */}
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className={`w-full px-4 py-3 bg-black/40 border rounded-lg text-xs font-mono text-white text-left flex items-center justify-between transition-colors ${
+                        errors.needs ? 'border-[#ff3b30]' : 'border-white/5 hover:border-white/10'
+                      }`}
+                      aria-haspopup="listbox"
+                      aria-expanded={isDropdownOpen}
+                    >
+                      <span className="truncate pr-4">
+                        {selectedNeeds.length === 0 
+                          ? 'Select services...' 
+                          : selectedNeeds.join(', ')}
+                      </span>
+                      <ChevronDown 
+                        size={14} 
+                        className={`text-white/50 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                      />
+                    </button>
+
+                    {/* Dropdown Menu Overlay */}
+                    {isDropdownOpen && (
+                      <div className="absolute z-50 left-0 right-0 mt-1 bg-[#121510] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                        <div className="p-1.5 space-y-0.5" role="listbox" aria-label="Services list">
+                          {needsOptions.map((opt) => {
+                            const isSelected = selectedNeeds.includes(opt.label);
+                            return (
+                              <button
+                                type="button"
+                                key={opt.id}
+                                onClick={() => toggleNeed(opt.label)}
+                                role="option"
+                                aria-selected={isSelected}
+                                className={`w-full px-3 py-2.5 rounded text-left text-[11px] font-mono transition-all flex items-center justify-between cursor-pointer ${
+                                  isSelected 
+                                    ? 'bg-[var(--lime)]/10 text-white' 
+                                    : 'text-[var(--muted)] hover:bg-white/5 hover:text-white'
+                                }`}
+                              >
+                                <span>{opt.label}</span>
+                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
+                                  isSelected ? 'bg-[var(--lime)] border-[var(--lime)] scale-110' : 'border-white/20 bg-transparent'
+                                }`}>
+                                  {isSelected && (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-2.5 h-2.5 text-[var(--ink)]">
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {errors.needs && <span className="block text-[10px] text-[#ff3b30] font-mono">{errors.needs}</span>}
                   </div>
                 </div>
@@ -413,26 +458,24 @@ export default function ProjectEnquiry() {
                 {/* GROUP 3: SCOPE */}
                 <div className="form-group-section">
                   <h4 className="form-group-title">03 — Scope</h4>
-                  <div className="grid grid-cols-1 gap-6">
-                    {/* Project Details */}
-                    <div className="space-y-2">
-                      <label htmlFor="details" className="block text-[10px] uppercase tracking-wider font-mono text-white">
-                        Project Details *
-                      </label>
-                      <textarea
-                        id="details"
-                        name="details"
-                        value={formData.details}
-                        onChange={handleInputChange}
-                        rows={3}
-                        placeholder="Tell us about your audience, current schedule, channels, and visual goals..."
-                        data-lenis-prevent
-                        className={`w-full px-4 py-3 bg-black/40 border rounded-lg text-xs font-mono text-white placeholder-[var(--muted-dark)] focus:outline-none focus:border-[var(--lime)] transition-colors ${
-                          errors.details ? 'border-[#ff3b30]' : 'border-white/5'
-                        }`}
-                      />
-                      {errors.details && <span className="block text-[10px] text-[#ff3b30] font-mono">{errors.details}</span>}
-                    </div>
+                  {/* Project Details */}
+                  <div className="space-y-2">
+                    <label htmlFor="details" className="block text-[10px] uppercase tracking-wider font-mono text-white">
+                      Project Details *
+                    </label>
+                    <textarea
+                      id="details"
+                      name="details"
+                      value={formData.details}
+                      onChange={handleInputChange}
+                      rows={4}
+                      placeholder="Tell us about your audience, current schedule, channels, and visual goals..."
+                      data-lenis-prevent
+                      className={`w-full px-4 py-3 bg-black/40 border rounded-lg text-xs font-mono text-white placeholder-[var(--muted-dark)] focus:outline-none focus:border-[var(--lime)] transition-colors ${
+                        errors.details ? 'border-[#ff3b30]' : 'border-white/5'
+                      }`}
+                    />
+                    {errors.details && <span className="block text-[10px] text-[#ff3b30] font-mono">{errors.details}</span>}
                   </div>
                 </div>
 
