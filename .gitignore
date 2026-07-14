@@ -25,3 +25,17 @@ dist-ssr
 
 # Project custom assets
 nice_one_frames/
+
+# Environment files
+.env
+.env.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# Scratch directory
+scratch/
+
+# TS build info
+*.tsbuildinfo

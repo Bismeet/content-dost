@@ -1,0 +1,142 @@
+import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../../lib/api-client.js';
+import type { Lead, LeadsResponse, LeadStats, LeadStatsResponse } from '../types/lead.js';
+
+export function useLeads(initialFilters: {
+  page: number;
+  limit: number;
+  status: string;
+  search: string;
+  sort: string;
+  order: 'asc' | 'desc';
+}) {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [stats, setStats] = useState<LeadStats | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
+  const [filters, setFilters] = useState(initialFilters);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchLeads = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Build query string
+      const params = new URLSearchParams();
+      params.append('page', String(filters.page));
+      params.append('limit', String(filters.limit));
+      if (filters.status) params.append('status', filters.status);
+      if (filters.search) params.append('search', filters.search);
+      params.append('sort', filters.sort);
+      params.append('order', filters.order);
+
+      const res = await apiFetch<LeadsResponse>(`/api/admin/leads?${params.toString()}`);
+      if (res.success) {
+        setLeads(res.data);
+        setPagination(res.pagination);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch leads');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      setIsStatsLoading(true);
+      const res = await apiFetch<LeadStatsResponse>('/api/admin/leads/stats');
+      if (res.success) {
+        setStats(res.stats);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    } finally {
+      setIsStatsLoading(false);
+    }
+  }, []);
+
+  const updateLead = async (
+    id: string,
+    updates: { status?: string; internalNotes?: string }
+  ): Promise<boolean> => {
+    try {
+      const res = await apiFetch<{ success: boolean }>(`/api/admin/leads/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+      });
+      if (res.success) {
+        // Refresh leads list and stats
+        await fetchLeads();
+        await fetchStats();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      alert(err.message || 'Failed to update lead');
+      return false;
+    }
+  };
+
+  const softArchive = async (id: string): Promise<boolean> => {
+    return updateLead(id, { status: 'archived' });
+  };
+
+  const exportCsv = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.status) params.append('status', filters.status);
+      if (filters.search) params.append('search', filters.search);
+      params.append('sort', filters.sort);
+      params.append('order', filters.order);
+
+      const csvData = await apiFetch<string>(`/api/admin/leads/export?${params.toString()}`);
+
+      // Create browser download link
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const dateStr = new Date().toISOString().split('T')[0];
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `leads-export-${dateStr}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      alert(err.message || 'Failed to export CSV');
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  return {
+    leads,
+    stats,
+    pagination,
+    filters,
+    setFilters,
+    isLoading,
+    isStatsLoading,
+    error,
+    refetch: fetchLeads,
+    refetchStats: fetchStats,
+    updateLead,
+    softArchive,
+    exportCsv,
+  };
+}

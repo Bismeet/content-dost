@@ -1,32 +1,67 @@
-# React + TypeScript + Vite
+# Content Dost | Premium Creative Content Engine
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Content Dost is a premium creative content partner for internet elite founders, creators, and brands. This repository holds the high-performance landing page integrated with a secure lead-capture backend and an isolated administrator portal.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Technical Stack
 
-## React Compiler
+- **Frontend**: React 19, Vite 8, TypeScript, Tailwind CSS v4, Framer Motion, GSAP, Pixi.js, Lenis Scroll.
+- **Routing**: React Router (isolated routes for administrator pages).
+- **Backend API**: Vercel Serverless Functions (Node.js).
+- **Database**: Supabase PostgreSQL (secured via Row Level Security).
+- **Authentication**: Supabase Auth (session management stored in HttpOnly secure cookies).
+- **Rate Limiting**: Upstash Redis sliding-window.
+- **Email Delivery**: Resend (plain-text notifications).
+- **Validation**: Zod (strict schemas for all public and admin mutations).
+- **Testing Suite**: Vitest (extensive security, schema, and API helper unit tests).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## Documentation Links
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+For detailed guides, please refer to:
+1. **[Backend Infrastructure Setup Guide](file:///c:/Users/as360/Documents/anunay%20landing%20page/BACKEND_SETUP.md)**: Setup instructions for Supabase, Upstash Redis, Resend, local development with Vercel CLI, and production hosting config.
+2. **[Administrator Portal Guide](file:///c:/Users/as360/Documents/anunay%20landing%20page/ADMIN_GUIDE.md)**: Step-by-step documentation for triage dashboard operations, filtering, internal notes, and data export.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+---
+
+## Local Development Commands
+
+### 1. Install Dependencies
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` and populate your secrets:
+```bash
+cp .env.example .env
+```
+
+### 3. Run the Development Server
+To run the full stack (Vite frontend + Serverless backend functions locally):
+```bash
+npm run dev:vercel
+```
+*Requires the Vercel CLI (`npm install -g vercel`) installed.*
+
+---
+
+## Verification & Build Checks
+
+Before committing or deploying, run the verification checks:
+
+```bash
+# 1. Lint the codebase
+npm run lint
+
+# 2. Type-check serverless API code
+npm run typecheck:server
+
+# 3. Run automated tests
+npm run test
+
+# 4. Compile and verify production build
+npm run build
+```

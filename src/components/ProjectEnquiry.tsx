@@ -1,21 +1,10 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, Lock } from 'lucide-react';
 
-const budgetOptions = [
-  { label: 'Less than $1,500 / mo', value: '<1500' },
-  { label: '$1,500 - $3,000 / mo', value: '1500-3000' },
-  { label: '$3,000 - $5,000 / mo', value: '3000-5000' },
-  { label: 'More than $5,000 / mo', value: '>5000' },
-];
+import { BUDGET_TIERS, SERVICE_NAMES } from '../../shared/lead-constants';
 
-const needsOptions = [
-  { label: 'Content Strategy', id: 'need-strategy' },
-  { label: 'Scriptwriting', id: 'need-scripts' },
-  { label: 'Long-Form Editing', id: 'need-long' },
-  { label: 'Shorts & Reels', id: 'need-shorts' },
-  { label: 'Podcast Production', id: 'need-podcast' },
-  { label: 'Visual Packaging (Thumbnails)', id: 'need-thumb' },
-];
+const budgetOptions = BUDGET_TIERS;
+const needsOptions = SERVICE_NAMES;
 
 // Custom Inline SVG Brand Icons to avoid version conflicts in lucide-react
 const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -96,12 +85,14 @@ export default function ProjectEnquiry() {
     profileUrl: '',
     budget: '',
     details: '',
+    website: '', // honeypot
   });
 
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -138,20 +129,54 @@ export default function ProjectEnquiry() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!validate()) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitSuccess(true);
-      
-      if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('debug')) {
-        console.info('Enquiry payload', { ...formData, needs: selectedNeeds });
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          company: formData.company || undefined,
+          profileUrl: formData.profileUrl || undefined,
+          budget: formData.budget,
+          details: formData.details,
+          needs: selectedNeeds,
+          website: formData.website,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Enquiry submission failed');
       }
-    }, 1500);
+
+      setSubmitSuccess(true);
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        profileUrl: '',
+        budget: '',
+        details: '',
+        website: '',
+      });
+      setSelectedNeeds([]);
+      setErrors({});
+    } catch (err) {
+      console.error('[Public Lead Form Submission Error]:', err);
+      setSubmitError('An error occurred while submitting your enquiry. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // High performance, direct style updates for mouse pointer tilt
@@ -382,8 +407,25 @@ export default function ProjectEnquiry() {
                   </div>
                 </div>
 
+                {/* Honeypot field - visually hidden and untabbable */}
+                <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }} aria-hidden="true">
+                  <input
+                    type="text"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
                 {/* Submit button & Privacy protection banner */}
                 <div className="space-y-3 pt-2">
+                  {submitError && (
+                    <div className="text-[10px] text-[#ff3b30] font-mono text-center pb-1">
+                      {submitError}
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={isSubmitting}
