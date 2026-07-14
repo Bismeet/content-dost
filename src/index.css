@@ -6836,28 +6836,28 @@ section[id] {
   background-color: #050505;
   color: #f6f3eb;
   overflow: hidden;
-  padding: 6rem 2rem 2.5rem;
+  padding: 7rem 2rem 2.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   text-align: center;
   box-sizing: border-box;
-  min-height: 720px;
+  min-height: 540px;
   z-index: 10;
 }
 
 @media (max-width: 1024px) {
   .cinematic-footer {
-    min-height: 620px;
-    padding: 5rem 1.5rem 2rem;
+    min-height: 460px;
+    padding: 6rem 1.5rem 2rem;
   }
 }
 
 @media (max-width: 640px) {
   .cinematic-footer {
-    min-height: 500px;
-    padding: 4rem 1rem 1.5rem;
+    min-height: 380px;
+    padding: 5rem 1rem 1.5rem;
   }
 }
 
