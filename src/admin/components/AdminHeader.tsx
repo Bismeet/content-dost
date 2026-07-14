@@ -37,6 +37,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         {showMenuButton && (
           <button
             onClick={onMenuToggle}
+            className="hamburger-menu-btn"
             aria-label="Toggle navigation menu"
             style={{
               background: 'none',
@@ -44,7 +45,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               color: '#f2f4ef',
               cursor: 'pointer',
               padding: '6px',
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: '6px',

@@ -100,3 +100,13 @@
     max-width: none;
   }
 }
+
+.hamburger-menu-btn {
+  display: flex !important;
+}
+
+@media (min-width: 1025px) {
+  .hamburger-menu-btn {
+    display: none !important;
+  }
+}
