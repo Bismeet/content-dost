@@ -48,6 +48,8 @@ import leadsListHandler from '../api/admin/leads/index.js';
 import leadsStatsHandler from '../api/admin/leads/stats.js';
 import leadsExportHandler from '../api/admin/leads/export.js';
 import leadDetailHandler from '../api/admin/leads/[id].js';
+import leadTrashHandler from '../api/admin/leads/[id]/trash.js';
+import leadRestoreHandler from '../api/admin/leads/[id]/restore.js';
 
 // 3. Start local development server on port 3000
 const server = http.createServer(async (req, res) => {
@@ -85,6 +87,10 @@ const server = http.createServer(async (req, res) => {
       await leadsExportHandler(req, res);
     } else if (pathname === '/api/admin/leads') {
       await leadsListHandler(req, res);
+    } else if (pathname.startsWith('/api/admin/leads/') && pathname.endsWith('/trash')) {
+      await leadTrashHandler(req, res);
+    } else if (pathname.startsWith('/api/admin/leads/') && pathname.endsWith('/restore')) {
+      await leadRestoreHandler(req, res);
     } else if (pathname.startsWith('/api/admin/leads/')) {
       // Dynamic route matching /api/admin/leads/:id
       await leadDetailHandler(req, res);
