@@ -25,17 +25,15 @@ export default function Navbar() {
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
-      return !!(hash && hash !== '#');
+      const isPostHeroHash = hash && hash !== '#' && NAV_LINKS.some(link => link.href === hash);
+      const isScrolledPastHero = window.scrollY > window.innerHeight - 100;
+      return !!(isPostHeroHash || isScrolledPastHero);
     }
     return false;
   });
 
   const isVisibleRef = useRef(isVisible);
   isVisibleRef.current = isVisible;
-
-  const prefersReducedMotion = typeof window !== 'undefined'
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false;
 
   // Observer for Hero Sentinel boundary
   useEffect(() => {
@@ -51,12 +49,16 @@ export default function Navbar() {
 
       observer = new IntersectionObserver(
         ([entry]) => {
-          const isPastHero = entry.isIntersecting || entry.boundingClientRect.top < 0;
-          if (isPastHero !== isVisibleRef.current) {
-            setIsVisible(isPastHero);
+          const sentinelTop = entry.boundingClientRect.top;
+          const passedHero = !entry.isIntersecting && sentinelTop < 0;
+          if (passedHero !== isVisibleRef.current) {
+            setIsVisible(passedHero);
           }
         },
-        { rootMargin: '0px 0px 0px 0px' }
+        {
+          threshold: 0,
+          rootMargin: '-8px 0px 0px 0px',
+        }
       );
       observer.observe(sentinel);
     };
@@ -218,143 +220,121 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileMenuOpen]);
 
-  // 7. Desktop Pointer Tilt effect (Restrained)
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if ('ontouchstart' in window || prefersReducedMotion) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-
-    const tiltX = -((y / (rect.height / 2)) * 0.4);
-    const tiltY = (x / (rect.width / 2)) * 0.4;
-    const shiftX = (x / (rect.width / 2)) * 2;
-
-    e.currentTarget.style.setProperty('--nav-tilt-x', `${tiltX}deg`);
-    e.currentTarget.style.setProperty('--nav-tilt-y', `${tiltY}deg`);
-    e.currentTarget.style.setProperty('--nav-shift-x', `${shiftX}px`);
-  };
-
-  const handleMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
-    e.currentTarget.style.setProperty('--nav-tilt-x', '0deg');
-    e.currentTarget.style.setProperty('--nav-tilt-y', '0deg');
-    e.currentTarget.style.setProperty('--nav-shift-x', '0px');
-  };
-
   const closeMenu = () => setMobileMenuOpen(false);
 
   return (
     <>
-      <header 
-        className={`site-navbar ${isScrolled ? 'site-navbar--scrolled' : ''} ${isVisible ? '' : 'site-navbar--hidden'}`}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="navbar-glass-surface" />
-        <div className="navbar-edge-sheen" />
-
-        {/* Logo Section */}
-        <a 
-          href="#" 
-          className="navbar-brand" 
-          aria-label="Content Dost home"
-          tabIndex={isVisible ? undefined : -1}
-          onClick={(e) => {
-            e.preventDefault();
-            const lenis = getLenisInstance();
-            if (lenis) lenis.scrollTo(0);
-            else window.scrollTo({ top: 0, behavior: 'smooth' });
-            window.history.pushState(null, '', '#');
-            setActiveSection('');
-          }}
+      <header className="site-navbar-shell">
+        <div 
+          className={`site-navbar-reveal ${isScrolled ? 'site-navbar-reveal--scrolled' : ''} ${isVisible ? 'site-navbar-reveal--visible' : ''}`}
         >
-          <span className="navbar-brand-icon" aria-hidden="true">
-            <svg width="100%" height="100%" viewBox="80 95 345 320" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="navIvoryGrad" x1="246" y1="106" x2="246" y2="406" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#F5F2EB" />
-                  <stop offset="100%" stop-color="#DCD8CD" />
-                </linearGradient>
-                <linearGradient id="navGoldGrad" x1="266" y1="106" x2="266" y2="406" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#FFD066" />
-                  <stop offset="100%" stop-color="#D47A1F" />
-                </linearGradient>
-              </defs>
-              {/* Left Ivory Segment */}
-              <path d="M 246 106 A 150 150 0 0 0 246 406 L 246 356 A 100 100 0 0 1 246 156 Z" fill="url(#navIvoryGrad)" />
-              {/* Right Gold Segment */}
-              <path d="M 266 106 L 266 156 A 100 100 0 0 1 266 356 L 266 406 A 150 150 0 0 0 266 106 Z" fill="url(#navGoldGrad)" />
-              {/* Center Play Triangle */}
-              <path d="M 235 222 C 235 215 241 215 245 218 L 289 252 C 293 255 293 257 289 260 L 245 294 C 241 297 235 297 235 290 Z" fill="url(#navGoldGrad)" />
-              {/* Sparkles */}
-              <path d="M 135 130 Q 160 130 160 105 Q 160 130 185 130 Q 160 130 160 155 Q 160 130 135 130 Z" fill="#FFD066" />
-              <path d="M 92 185 Q 110 185 110 167 Q 110 185 128 185 Q 110 185 110 203 Q 110 185 92 185 Z" fill="#ADC6FF" />
-              <circle cx="120" cy="230" r="5.5" fill="#FFD066" />
-            </svg>
-          </span>
-          <span className="navbar-brand-text">Content <span>Dost</span></span>
-        </a>
+          <div className="navbar-glass-surface" />
+          <div className="navbar-edge-sheen" />
 
-        {/* Desktop Centered Links */}
-        <div className="navbar-links-chassis">
-          <nav className="navbar-links" aria-label="Primary navigation">
-            {NAV_LINKS.map((link) => {
-              const isActive = activeSection === link.href.slice(1);
-              return (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  ref={(el) => { linkRefs.current[link.href.slice(1)] = el; }}
-                  onClick={(e) => handleLinkClick(e, link.href)}
-                  className={`navbar-link ${isActive ? 'navbar-link--active' : ''}`}
-                  aria-current={isActive ? 'location' : undefined}
-                  tabIndex={isVisible ? undefined : -1}
-                >
-                  {link.label}
-                </a>
-              );
-            })}
-          </nav>
-          
-          {/* Gliding capsule & rail */}
-          <span 
-            className="navbar-gliding-capsule" 
-            style={{
-              transform: `translate3d(${indicatorStyle.left}px, -50%, 0)`,
-              width: `${indicatorStyle.width}px`,
-              opacity: indicatorStyle.opacity
-            }} 
-            aria-hidden="true"
-          />
-          <span 
-            className="navbar-gliding-rail" 
-            style={{
-              transform: `translate3d(${indicatorStyle.left}px, 0, 0)`,
-              width: `${indicatorStyle.width}px`,
-              opacity: indicatorStyle.opacity
-            }} 
-            aria-hidden="true"
-          />
-        </div>
-
-        {/* Right CTA / Menu Button */}
-        <div className="navbar-cta-wrap">
-          <a href="#contact" className="navbar-cta" tabIndex={isVisible ? undefined : -1}>
-            <span className="navbar-cta-desktop">Start a project</span>
-            <span className="navbar-cta-mobile">Start project</span>
-            <ArrowUpRight size={15} className="cta-arrow-icon" aria-hidden="true" />
-          </a>
-          <button
-            ref={menuButtonRef}
-            type="button"
-            onClick={() => setMobileMenuOpen((open) => !open)}
-            className="navbar-menu-btn"
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-navigation"
+          {/* Logo Section */}
+          <a 
+            href="#" 
+            className="navbar-brand" 
+            aria-label="Content Dost home"
             tabIndex={isVisible ? undefined : -1}
+            onClick={(e) => {
+              e.preventDefault();
+              const lenis = getLenisInstance();
+              if (lenis) lenis.scrollTo(0);
+              else window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.history.pushState(null, '', '#');
+              setActiveSection('');
+            }}
           >
-            <Menu size={19} aria-hidden="true" />
-          </button>
+            <span className="navbar-brand-icon" aria-hidden="true">
+              <svg width="100%" height="100%" viewBox="80 95 345 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="navIvoryGrad" x1="246" y1="106" x2="246" y2="406" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#F5F2EB" />
+                    <stop offset="100%" stop-color="#DCD8CD" />
+                  </linearGradient>
+                  <linearGradient id="navGoldGrad" x1="266" y1="106" x2="266" y2="406" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#FFD066" />
+                    <stop offset="100%" stop-color="#D47A1F" />
+                  </linearGradient>
+                </defs>
+                {/* Left Ivory Segment */}
+                <path d="M 246 106 A 150 150 0 0 0 246 406 L 246 356 A 100 100 0 0 1 246 156 Z" fill="url(#navIvoryGrad)" />
+                {/* Right Gold Segment */}
+                <path d="M 266 106 L 266 156 A 100 100 0 0 1 266 356 L 266 406 A 150 150 0 0 0 266 106 Z" fill="url(#navGoldGrad)" />
+                {/* Center Play Triangle */}
+                <path d="M 235 222 C 235 215 241 215 245 218 L 289 252 C 293 255 293 257 289 260 L 245 294 C 241 297 235 297 235 290 Z" fill="url(#navGoldGrad)" />
+                {/* Sparkles */}
+                <path d="M 135 130 Q 160 130 160 105 Q 160 130 185 130 Q 160 130 160 155 Q 160 130 135 130 Z" fill="#FFD066" />
+                <path d="M 92 185 Q 110 185 110 167 Q 110 185 128 185 Q 110 185 110 203 Q 110 185 92 185 Z" fill="#ADC6FF" />
+                <circle cx="120" cy="230" r="5.5" fill="#FFD066" />
+              </svg>
+            </span>
+            <span className="navbar-brand-text">Content <span>Dost</span></span>
+          </a>
+
+          {/* Desktop Centered Links */}
+          <div className="navbar-links-chassis">
+            <nav className="navbar-links" aria-label="Primary navigation">
+              {NAV_LINKS.map((link) => {
+                const isActive = activeSection === link.href.slice(1);
+                return (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    ref={(el) => { linkRefs.current[link.href.slice(1)] = el; }}
+                    onClick={(e) => handleLinkClick(e, link.href)}
+                    className={`navbar-link ${isActive ? 'navbar-link--active' : ''}`}
+                    aria-current={isActive ? 'location' : undefined}
+                    tabIndex={isVisible ? undefined : -1}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
+            </nav>
+            
+            {/* Gliding capsule & rail */}
+            <span 
+              className="navbar-gliding-capsule" 
+              style={{
+                transform: `translate3d(${indicatorStyle.left}px, -50%, 0)`,
+                width: `${indicatorStyle.width}px`,
+                opacity: indicatorStyle.opacity
+              }} 
+              aria-hidden="true"
+            />
+            <span 
+              className="navbar-gliding-rail" 
+              style={{
+                transform: `translate3d(${indicatorStyle.left}px, 0, 0)`,
+                width: `${indicatorStyle.width}px`,
+                opacity: indicatorStyle.opacity
+              }} 
+              aria-hidden="true"
+            />
+          </div>
+
+          {/* Right CTA / Menu Button */}
+          <div className="navbar-cta-wrap">
+            <a href="#contact" className="navbar-cta" tabIndex={isVisible ? undefined : -1}>
+              <span className="navbar-cta-desktop">Start a project</span>
+              <span className="navbar-cta-mobile">Start project</span>
+              <ArrowUpRight size={15} className="cta-arrow-icon" aria-hidden="true" />
+            </a>
+            <button
+              ref={menuButtonRef}
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="navbar-menu-btn"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
+              tabIndex={isVisible ? undefined : -1}
+            >
+              <Menu size={19} aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </header>
 

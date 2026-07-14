@@ -228,12 +228,6 @@ export default function HeroScroll() {
       gsap.set('.hero-final-veil', { opacity: 1 });
       gsap.set('.hero-final-reveal', { opacity: 1, y: 0, xPercent: -50, yPercent: -50 });
       gsap.set('.hero-final-actions', { opacity: 1, y: 0 });
-      gsap.set('.site-navbar', {
-        autoAlpha: 1,
-        y: 0,
-        pointerEvents: 'auto',
-        overwrite: true,
-      });
       return;
     }
     
@@ -435,13 +429,6 @@ export default function HeroScroll() {
             immediate: true,
             offset: -96,
           });
-          gsap.to('.site-navbar', {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0,
-            pointerEvents: 'auto',
-            overwrite: true,
-          });
           ScrollTrigger.refresh();
         }
       }
@@ -449,14 +436,6 @@ export default function HeroScroll() {
 
     return () => {
       context.revert();
-      // Ensure navbar is restored to visible state on unmount
-      if (document.querySelector('.site-navbar')) {
-        gsap.set('.site-navbar', {
-          autoAlpha: 1,
-          y: 0,
-          pointerEvents: 'auto',
-        });
-      }
     };
   }, [isFirstFrameLoaded, prefersReducedMotion]);
 

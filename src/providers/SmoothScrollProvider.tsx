@@ -65,14 +65,6 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
             immediate: true,
             offset: -96,
           });
-          // Make sure navbar is shown because we are past the Hero section
-          gsap.to('.site-navbar', {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.1,
-            pointerEvents: 'auto',
-            overwrite: true,
-          });
           ScrollTrigger.refresh();
         }
       }
