@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, Lock } from 'lucide-react';
+import { CheckCircle2, Lock } from 'lucide-react';
 
 import { SERVICE_NAMES } from '../../shared/lead-constants';
 
@@ -202,8 +202,8 @@ export default function ProjectEnquiry() {
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start max-w-7xl mx-auto relative z-10">
           
-          {/* 1. LEFT TOP COLUMN: Introduction & Availability (Order 1 on mobile) */}
-          <div className="contact-intro-block">
+          {/* 1. LEFT COLUMN: Heading & Social Presence (Order 1 on mobile, span 5 on desktop) */}
+          <div className="lg:col-span-5 contact-intro-block">
             <div>
               <h2>
                 Have an idea <br />
@@ -211,14 +211,83 @@ export default function ProjectEnquiry() {
                 shaping?
               </h2>
               
-              <p className="font-editorial max-w-md">
-                Let's turn your vision into high-impact, cinematic content built to hold attention and move your brand forward.
-              </p>
+              <div className="relative inline-block w-full max-w-[420px] pt-8 social-dock-wrapper mx-auto lg:mx-0">
+                {/* Crescent Moon Rim/Glow Backdrop */}
+                <div className="dock-moon-backdrop" />
+
+                <div 
+                  className="social-dock-capsule relative z-10"
+                  onMouseLeave={() => setHoveredIdx(null)}
+                >
+                  {[
+                    {
+                      name: 'Instagram',
+                      href: 'https://instagram.com/contentdost',
+                      icon: <InstagramIcon />,
+                      class: 'instagram',
+                      glow: 'rgba(225, 48, 108, 0.4)'
+                    },
+                    {
+                      name: 'LinkedIn',
+                      href: 'https://linkedin.com/company/contentdost',
+                      icon: <LinkedInIcon />,
+                      class: 'linkedin',
+                      glow: 'rgba(0, 119, 181, 0.4)'
+                    },
+                    {
+                      name: 'YouTube',
+                      href: 'https://youtube.com/contentdost',
+                      icon: <YouTubeIcon />,
+                      class: 'youtube',
+                      glow: 'rgba(255, 0, 0, 0.4)'
+                    },
+                    {
+                      name: 'Twitter X',
+                      href: 'https://twitter.com/contentdost',
+                      icon: <XIcon />,
+                      class: 'twitter',
+                      glow: 'rgba(255, 255, 255, 0.25)'
+                    }
+                  ].map((item, idx) => {
+                    const distance = hoveredIdx !== null ? Math.abs(hoveredIdx - idx) : null;
+                    let scale = 1;
+                    let translateY = '0px';
+
+                    if (distance === 0) {
+                      scale = 1.35;
+                      translateY = '-16px';
+                    } else if (distance === 1) {
+                      scale = 1.15;
+                      translateY = '-6px';
+                    }
+
+                    return (
+                      <a
+                        key={item.name}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`social-dock-item ${item.class}`}
+                        style={{
+                          transform: `scale(${scale}) translateY(${translateY})`,
+                          filter: hoveredIdx === idx ? `drop-shadow(0 10px 25px ${item.glow})` : 'none'
+                        }}
+                        onMouseMove={(e) => handleDockMouseMove(e, idx)}
+                        onMouseLeave={handleDockMouseLeave}
+                        aria-label={item.name}
+                      >
+                        <div className="social-dock-icon-wrapper">
+                          {item.icon}
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            
           </div>
 
-          {/* 2. RIGHT COLUMN: Form Card (Order 2 on mobile, spans 2 rows on desktop) */}
+          {/* 2. RIGHT COLUMN: Form Card (Order 2 on mobile, spans 7 columns on desktop) */}
           <div className="lg:col-span-7 bg-[var(--ink-soft)] border border-white/5 rounded-2xl p-6 md:p-8 relative overflow-hidden contact-form-block">
             
             {!submitSuccess ? (
@@ -396,7 +465,7 @@ export default function ProjectEnquiry() {
                     ) : (
                       <>
                         <span>Submit project inquiry</span>
-                        <Send className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                        <Lock className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                       </>
                     )}
                   </button>
@@ -430,91 +499,6 @@ export default function ProjectEnquiry() {
               </div>
             )}
 
-          </div>
-
-          {/* 3. LEFT BOTTOM COLUMN: Social Presence (Order 3 on mobile) */}
-          <div className="lg:col-span-5 contact-details-block pt-6 lg:pt-0">
-            {/* Social Presence & 3D Clay Social Dock */}
-            <div className="space-y-5">
-              <h3 className="text-xl md:text-2xl font-semibold text-[var(--bone)] leading-tight tracking-tight">
-                We drive growth <br />
-                <span className="font-editorial italic">across platforms.</span>
-              </h3>
-              
-              <div className="relative inline-block w-full max-w-[420px] pt-4 social-dock-wrapper">
-                {/* Crescent Moon Rim/Glow Backdrop */}
-                <div className="dock-moon-backdrop" />
-
-                <div 
-                  className="social-dock-capsule relative z-10"
-                  onMouseLeave={() => setHoveredIdx(null)}
-                >
-                  {[
-                    {
-                      name: 'Instagram',
-                      href: 'https://instagram.com/contentdost',
-                      icon: <InstagramIcon />,
-                      class: 'instagram',
-                      glow: 'rgba(225, 48, 108, 0.4)'
-                    },
-                    {
-                      name: 'LinkedIn',
-                      href: 'https://linkedin.com/company/contentdost',
-                      icon: <LinkedInIcon />,
-                      class: 'linkedin',
-                      glow: 'rgba(0, 119, 181, 0.4)'
-                    },
-                    {
-                      name: 'YouTube',
-                      href: 'https://youtube.com/contentdost',
-                      icon: <YouTubeIcon />,
-                      class: 'youtube',
-                      glow: 'rgba(255, 0, 0, 0.4)'
-                    },
-                    {
-                      name: 'Twitter X',
-                      href: 'https://twitter.com/contentdost',
-                      icon: <XIcon />,
-                      class: 'twitter',
-                      glow: 'rgba(255, 255, 255, 0.25)'
-                    }
-                  ].map((item, idx) => {
-                    const distance = hoveredIdx !== null ? Math.abs(hoveredIdx - idx) : null;
-                    let scale = 1;
-                    let translateY = '0px';
-
-                    if (distance === 0) {
-                      scale = 1.35;
-                      translateY = '-16px';
-                    } else if (distance === 1) {
-                      scale = 1.15;
-                      translateY = '-6px';
-                    }
-
-                    return (
-                      <a
-                        key={item.name}
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`social-dock-item ${item.class}`}
-                        style={{
-                          transform: `scale(${scale}) translateY(${translateY})`,
-                          filter: hoveredIdx === idx ? `drop-shadow(0 10px 25px ${item.glow})` : 'none'
-                        }}
-                        onMouseMove={(e) => handleDockMouseMove(e, idx)}
-                        onMouseLeave={handleDockMouseLeave}
-                        aria-label={item.name}
-                      >
-                        <div className="social-dock-icon-wrapper">
-                          {item.icon}
-                        </div>
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
           </div>
 
         </div>
