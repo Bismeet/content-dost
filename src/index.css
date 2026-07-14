@@ -6833,7 +6833,7 @@ section[id] {
    ========================================================================== */
 .cinematic-footer {
   position: relative;
-  background-color: #050505;
+  background-color: transparent;
   color: #f6f3eb;
   overflow: hidden;
   padding: 7rem 2rem 2.5rem;
