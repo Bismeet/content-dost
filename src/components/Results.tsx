@@ -146,7 +146,7 @@ export default function Results() {
                   Typography, captions, colour, framing and sound treatments remain consistent across every format.
                 </p>
                 <div className="chamber-supporting font-mono">
-                  One creative language across long-form, short-form and supporting assets.
+                  One creative language across videos, brand assets and web presence.
                 </div>
                 <a href="#services" className="chamber-cta-link font-mono">
                   See the workflow <ArrowUpRight className="cta-arrow-icon" size={13} />

@@ -5,7 +5,7 @@ export default function Differentiators() {
     {
       icon: <Layers className="w-5 h-5 text-orange-500" />,
       title: "Strategy + Execution",
-      description: "We don't just edit what you send. We build the script format and topics, guide the shoot, execute the edit, and design the thumbnails. It's a cohesive engine."
+      description: "We don't just edit what you send. We build the content strategy, write the scripts, execute the edit, and manage the brand. It's a cohesive engine."
     },
     {
       icon: <Cpu className="w-5 h-5 text-orange-500" />,
@@ -24,8 +24,8 @@ export default function Differentiators() {
     },
     {
       icon: <RefreshCw className="w-5 h-5 text-orange-500" />,
-      title: "Multi-Platform Repurposing",
-      description: "We translate a single long-form podcast or educational video into vertical reels, TikToks, LinkedIn threads, and newsletters. Multiply your distribution by 10x."
+      title: "Brand & Web Consistency",
+      description: "We ensure your brand identity stays consistent across all content, platforms and your website — from tone and colours to layout and messaging."
     },
     {
       icon: <CheckSquare className="w-5 h-5 text-orange-500" />,

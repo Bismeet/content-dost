@@ -132,7 +132,7 @@ export default function Hero() {
 
         {/* Supporting paragraph */}
         <p className="text-[#B8ACA3] text-base md:text-lg font-medium max-w-2xl leading-relaxed text-center mx-auto">
-          Scripts, editing, reels, podcasts, and content systems for creators and brands that want to grow without building a full in-house team.
+          Strategy, scriptwriting, video editing, brand management and websites for creators and brands that want to grow without building a full in-house team.
         </p>
 
         {/* Action CTAs */}
@@ -150,7 +150,7 @@ export default function Hero() {
         {/* Bottom Service Line */}
         <div className="w-full pt-6 border-t border-zinc-900 mt-6 select-none text-center">
           <p className="font-mono text-[10px] text-zinc-550 uppercase tracking-widest font-bold">
-            VIDEO &bull; SCRIPTS &bull; REELS &bull; PODCASTS &bull; BRAND CONTENT
+            STRATEGY &bull; SCRIPTWRITING &bull; VIDEO EDITING &bull; BRAND MANAGEMENT &bull; WEBSITES
           </p>
         </div>
 

@@ -14,13 +14,11 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
 
   const servicesOpts = [
-    "Full Retainer System",
-    "Cinematic Video Editing",
-    "Reels / Shorts Editing",
-    "Script Writing",
-    "Long-to-Short Repurposing",
-    "Thumbnail Packaging",
-    "Personal Branding"
+    "Content Strategy",
+    "Scriptwriting",
+    "Video Editing",
+    "Brand Management",
+    "Website Making"
   ];
 
   const handleServiceToggle = (service: string) => {

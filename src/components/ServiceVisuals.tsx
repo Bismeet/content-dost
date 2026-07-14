@@ -115,8 +115,8 @@ function ScriptwritingVisual({ active }: VisualProps) {
   );
 }
 
-// 03 — LONG-FORM EDITING: "Time Sculpture Studio"
-function LongFormEditingVisual({ active }: VisualProps) {
+// 03 — VIDEO EDITING: "Time Sculpture Studio"
+function VideoEditingVisual({ active }: VisualProps) {
   return (
     <div className={`artifact-scene scene-long-form-editing ${active ? 'scene-active' : 'scene-inactive'}`}>
       <div className="time-sculpture" style={{ transform: 'translate3d(0, 0, 10px)' }}>
@@ -161,158 +161,114 @@ function LongFormEditingVisual({ active }: VisualProps) {
   );
 }
 
-// 04 — SHORTS AND REELS: "Attention Refraction Engine"
-function ShortsReelsVisual({ active }: VisualProps) {
+// 04 — BRAND MANAGEMENT: "Identity Calibration System"
+function BrandManagementVisual({ active }: VisualProps) {
   return (
-    <div className={`artifact-scene scene-shorts-reels ${active ? 'scene-active' : 'scene-inactive'}`}>
-      <div className="refraction-engine" style={{ transform: 'translate3d(0, 0, 10px)' }}>
-        {/* Horizontal Input Film Ribbon */}
-        <div className="input-beam-ribbon" style={{ transform: 'translate3d(-64px, -16px, 12px)' }}>
-          <span className="beam-pulse" />
+    <div className={`artifact-scene scene-brand-management ${active ? 'scene-active' : 'scene-inactive'}`}>
+      <div className="brand-calibration-system" style={{ transform: 'translate3d(0, 0, 10px)' }}>
+        {/* Brand Identity Core */}
+        <div className="brand-identity-core" style={{ transform: 'translate3d(0, -16px, 24px)' }}>
+          <div className="identity-ring ring-outer" />
+          <div className="identity-ring ring-middle" />
+          <div className="identity-ring ring-inner" />
+          <div className="identity-center-dot" />
         </div>
 
-        {/* Central Refraction Prism */}
-        <div className="refraction-prism" style={{ transform: 'translate3d(-8px, -16px, 24px)' }}>
-          <div className="prism-glass" />
-          <div className="prism-glow" />
-        </div>
-
-        {/* Three Standing Vertical Film Artifacts */}
-        <div className="vertical-slab slab-1" style={{ transform: 'translate3d(24px, -6px, 28px) rotateY(-12deg)' }}>
-          <div className="slab-aspect font-mono">9:16</div>
-          <div className="slab-title font-mono">HOOK</div>
-          <div className="slab-lines"><span /><span /></div>
-          <div className="slab-guides" />
+        {/* Scattered brand elements converging */}
+        <div className="brand-element element-tone" style={{ transform: 'translate3d(-56px, -24px, 16px) rotate(-6deg)' }}>
+          <span className="element-tag font-mono">TONE</span>
+          <div className="element-line" />
         </div>
         
-        <div className="vertical-slab slab-2" style={{ transform: 'translate3d(54px, -12px, 34px) rotateY(-12deg)' }}>
-          <div className="slab-aspect font-mono">9:16</div>
-          <div className="slab-title font-mono font-bold" style={{ color: 'var(--cine-gold)' }}>RETAIN</div>
-          <div className="slab-lines"><span /><span /><span /></div>
-          <div className="slab-guides" />
-        </div>
-
-        <div className="vertical-slab slab-3" style={{ transform: 'translate3d(84px, -6px, 28px) rotateY(-12deg)' }}>
-          <div className="slab-aspect font-mono">9:16</div>
-          <div className="slab-title font-mono">CONVERT</div>
-          <div className="slab-lines"><span /><span /></div>
-          <div className="slab-guides" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 05 — PODCAST PRODUCTION: "Spatial Conversation Studio"
-function PodcastProductionVisual({ active }: VisualProps) {
-  return (
-    <div className={`artifact-scene scene-podcast-production ${active ? 'scene-active' : 'scene-inactive'}`}>
-      <div className="resonance-chamber" style={{ transform: 'translate3d(0, 0, 10px)' }}>
-        {/* Circular Acoustic Desk */}
-        <div className="acoustic-desk" style={{ transform: 'translate3d(0, 8px, 15px)' }}>
-          <div className="desk-rim" />
-        </div>
-
-        {/* Microphones facing each other */}
-        <div className="micro-sculpture host-mic" style={{ transform: 'translate3d(-42px, -18px, 28px)' }}>
-          <div className="micro-grille-3d" />
-          <div className="micro-suspension" />
-          <div className="micro-arm" />
+        <div className="brand-element element-colors" style={{ transform: 'translate3d(52px, -28px, 18px) rotate(4deg)' }}>
+          <span className="element-tag font-mono">COLOURS</span>
+          <div className="element-swatches">
+            <span className="swatch swatch-1" />
+            <span className="swatch swatch-2" />
+            <span className="swatch swatch-3" />
+          </div>
         </div>
         
-        <div className="micro-sculpture guest-mic" style={{ transform: 'translate3d(32px, -22px, 24px)' }}>
-          <div className="micro-grille-3d" />
-          <div className="micro-suspension" />
-          <div className="micro-arm" />
+        <div className="brand-element element-direction" style={{ transform: 'translate3d(-42px, 18px, 14px) rotate(-3deg)' }}>
+          <span className="element-tag font-mono">DIRECTION</span>
+          <div className="element-line" />
         </div>
 
-        {/* Floating Acoustic Rings */}
-        <div className="acoustic-ring ring-top" style={{ transform: 'translate3d(-6px, -38px, 20px)' }} />
-
-        {/* Tactile Mixer Faders */}
-        <div className="tactile-mixer" style={{ transform: 'translate3d(-18px, 22px, 34px)' }}>
-          <div className="mixer-fader-3d f-1"><span className="f-knob" /></div>
-          <div className="mixer-fader-3d f-2"><span className="f-knob" /></div>
+        <div className="brand-element element-content" style={{ transform: 'translate3d(48px, 14px, 16px) rotate(2deg)' }}>
+          <span className="element-tag font-mono">CONTENT</span>
+          <div className="element-line" />
         </div>
 
-        {/* Output Waveform Ribbon exiting Port */}
-        <div className="output-port" style={{ transform: 'translate3d(62px, 12px, 22px)' }}>
-          <div className="port-glow" />
-          <div className="wave-exit-ribbon" />
+        {/* Convergence lines */}
+        <svg className="brand-convergence-paths" viewBox="0 0 200 120">
+          <path className="convergence-line line-1" d="M 30,30 C 60,50 80,60 100,60" fill="none" stroke="var(--cine-gold)" strokeWidth="1.5" strokeDasharray="3 3" />
+          <path className="convergence-line line-2" d="M 170,28 C 140,48 120,58 100,60" fill="none" stroke="var(--cine-gold)" strokeWidth="1.5" strokeDasharray="3 3" />
+          <path className="convergence-line line-3" d="M 38,95 C 58,80 78,68 100,60" fill="none" stroke="var(--cine-orange)" strokeWidth="1.5" strokeDasharray="3 3" />
+          <path className="convergence-line line-4" d="M 162,90 C 142,78 122,68 100,60" fill="none" stroke="var(--cine-orange)" strokeWidth="1.5" strokeDasharray="3 3" />
+        </svg>
+
+        {/* Publishing consistency badge */}
+        <div className="brand-status-badge font-mono" style={{ transform: 'translate3d(0, 26px, 28px)' }}>
+          SYSTEM ACTIVE
         </div>
       </div>
     </div>
   );
 }
 
-// 06 — VISUAL PACKAGING: "Thumbnail and Identity Forge"
-function VisualPackagingVisual({ active }: VisualProps) {
+// 05 — WEBSITE MAKING: "Website Assembly Studio"
+function WebsiteMakingVisual({ active }: VisualProps) {
   return (
-    <div className={`artifact-scene scene-visual-packaging ${active ? 'scene-active' : 'scene-inactive'}`}>
-      <div className="attention-forge" style={{ transform: 'translate3d(0, 0, 10px)' }}>
-        {/* Background alternate stacks */}
-        <div className="alt-design-card card-back-1" style={{ transform: 'translate3d(-52px, -24px, 12px) rotateY(18deg) rotate(-4deg)' }} />
-        <div className="alt-design-card card-back-2" style={{ transform: 'translate3d(-38px, -18px, 16px) rotateY(18deg) rotate(-4deg)' }} />
-
-        {/* Winning Composition on Pedestal */}
-        <div className="winning-composition" style={{ transform: 'translate3d(24px, -8px, 28px)' }}>
-          <div className="comp-grid" />
-          <div className="comp-focal" />
-          <div className="comp-title-block"><span /><span /></div>
-          <div className="comp-badge font-mono">16:9</div>
+    <div className={`artifact-scene scene-website-making ${active ? 'scene-active' : 'scene-inactive'}`}>
+      <div className="website-assembly-studio" style={{ transform: 'translate3d(0, 0, 10px)' }}>
+        {/* Browser Frame */}
+        <div className="browser-frame" style={{ transform: 'translate3d(0, -18px, 22px)' }}>
+          <div className="browser-bar">
+            <div className="browser-dots">
+              <span className="dot dot-red" />
+              <span className="dot dot-yellow" />
+              <span className="dot dot-green" />
+            </div>
+            <div className="browser-url font-mono">contentdost.agency</div>
+          </div>
+          <div className="browser-viewport">
+            {/* Layout grid inside */}
+            <div className="layout-grid">
+              <div className="grid-header" />
+              <div className="grid-hero">
+                <div className="hero-text-block">
+                  <span className="text-line line-1" />
+                  <span className="text-line line-2" />
+                </div>
+              </div>
+              <div className="grid-content">
+                <div className="content-col col-1" />
+                <div className="content-col col-2" />
+                <div className="content-col col-3" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Attention Forge Rails */}
-        <div className="forge-rail rail-h" style={{ transform: 'translate3d(24px, -28px, 32px)' }} />
-        <div className="forge-rail rail-v" style={{ transform: 'translate3d(-18px, -8px, 32px)' }} />
+        {/* Floating component blocks assembling into the browser */}
+        <div className="component-float comp-typography" style={{ transform: 'translate3d(-62px, -32px, 14px) rotate(-8deg)' }}>
+          <span className="comp-label font-mono">TYPE</span>
+        </div>
+        
+        <div className="component-float comp-interactions" style={{ transform: 'translate3d(62px, -26px, 16px) rotate(5deg)' }}>
+          <span className="comp-label font-mono">INTERACT</span>
+        </div>
 
-        {/* Attention tracker lines */}
-        <svg className="attention-paths" viewBox="0 0 200 120">
-          <path className="eye-path" d="M 120,40 L 140,65 L 90,80" fill="none" stroke="var(--cine-orange)" strokeWidth="1.5" strokeDasharray="3 3" />
+        <div className="component-float comp-responsive" style={{ transform: 'translate3d(-54px, 22px, 12px) rotate(-4deg)' }}>
+          <span className="comp-label font-mono">RESPONSIVE</span>
+        </div>
+
+        {/* Assembly connection lines */}
+        <svg className="assembly-paths" viewBox="0 0 200 120">
+          <path className="assembly-line line-1" d="M 28,32 C 48,42 68,48 88,52" fill="none" stroke="var(--cine-gold)" strokeWidth="1.5" strokeDasharray="3 3" />
+          <path className="assembly-line line-2" d="M 172,36 C 152,44 132,50 112,52" fill="none" stroke="var(--cine-gold)" strokeWidth="1.5" strokeDasharray="3 3" />
+          <path className="assembly-line line-3" d="M 34,88 C 54,78 74,68 88,60" fill="none" stroke="var(--cine-orange)" strokeWidth="1.5" strokeDasharray="3 3" />
         </svg>
-      </div>
-    </div>
-  );
-}
-
-// 07 — CHANNEL MANAGEMENT: "Broadcast Control Station"
-function ChannelManagementVisual({ active }: VisualProps) {
-  return (
-    <div className={`artifact-scene scene-channel-management ${active ? 'scene-active' : 'scene-inactive'}`}>
-      <div className="broadcast-station" style={{ transform: 'translate3d(0, 0, 10px)' }}>
-        {/* Dispatch Console base */}
-        <div className="dispatch-console" style={{ transform: 'translate3d(0, 12px, 15px)' }}>
-          <div className="console-status font-mono">STATUS: ACTIVE</div>
-        </div>
-
-        {/* Floating Destination Cards */}
-        <div className="destination-card dest-youtube" style={{ transform: 'translate3d(-56px, -24px, 28px) rotateY(15deg)' }}>
-          <span className="dest-tag font-mono">YOUTUBE</span>
-          <div className="dest-progress"><span className="progress-fill fill-yt" /></div>
-        </div>
-
-        <div className="destination-card dest-spotify" style={{ transform: 'translate3d(0px, -28px, 32px) rotateY(15deg)' }}>
-          <span className="dest-tag font-mono">SPOTIFY</span>
-          <div className="dest-progress"><span className="progress-fill fill-spot" /></div>
-        </div>
-
-        <div className="destination-card dest-instagram" style={{ transform: 'translate3d(56px, -24px, 28px) rotateY(15deg)' }}>
-          <span className="dest-tag font-mono">INSTAGRAM</span>
-          <div className="dest-progress"><span className="progress-fill fill-insta" /></div>
-        </div>
-
-        {/* Dispatch Laser connections */}
-        <svg className="dispatch-lasers" viewBox="0 0 200 120">
-          <line className="laser-beam beam-yt" x1="100" y1="90" x2="44" y2="40" stroke="rgba(244,185,66,0.15)" strokeWidth="1.5" />
-          <line className="laser-beam beam-spot" x1="100" y1="90" x2="100" y2="35" stroke="rgba(244,185,66,0.15)" strokeWidth="1.5" />
-          <line className="laser-beam beam-insta" x1="100" y1="90" x2="156" y2="40" stroke="rgba(244,185,66,0.15)" strokeWidth="1.5" />
-        </svg>
-
-        {/* Big tactile status lever */}
-        <div className="status-lever" style={{ transform: 'translate3d(-20px, 18px, 35px)' }}>
-          <span className="lever-post" />
-          <span className="lever-handle-ball" />
-        </div>
       </div>
     </div>
   );
@@ -398,14 +354,12 @@ export function ServiceVisualStage({ activeTab }: StageProps) {
           <div className="pedestal-front" />
         </div>
 
-        {/* Six Interactive Scene Mounts */}
+        {/* Five Interactive Scene Mounts */}
         <ContentStrategyVisual active={activeTab === 0} />
         <ScriptwritingVisual active={activeTab === 1} />
-        <LongFormEditingVisual active={activeTab === 2} />
-        <ShortsReelsVisual active={activeTab === 3} />
-        <PodcastProductionVisual active={activeTab === 4} />
-        <VisualPackagingVisual active={activeTab === 5} />
-        <ChannelManagementVisual active={activeTab === 6} />
+        <VideoEditingVisual active={activeTab === 2} />
+        <BrandManagementVisual active={activeTab === 3} />
+        <WebsiteMakingVisual active={activeTab === 4} />
       </div>
     </div>
   );

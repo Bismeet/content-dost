@@ -1,5 +1,6 @@
 export interface ServiceItem {
   id: string;
+  number: string;
   title: string;
   description: string;
   shortDescription: string;
@@ -11,7 +12,7 @@ export interface PortfolioItem {
   title: string;
   creator: string;
   category: string;
-  platform: 'YouTube' | 'Reels' | 'Podcast' | 'Multi-Channel';
+  platform: string;
   stats: {
     views?: string;
     metricLabel?: string;
@@ -23,7 +24,7 @@ export interface PortfolioItem {
   capabilities?: string[];
   mockVideoColor: string;
   duration: string;
-  isConcept: boolean; // Mark portfolio sample / concept project
+  isConcept: boolean;
 }
 
 export interface ProcessStep {
@@ -40,7 +41,7 @@ export interface TestimonialItem {
   company: string;
   content: string;
   achievement: string;
-  isFallback: boolean; // Development fallback indicator
+  isFallback: boolean;
 }
 
 export interface FAQItem {
@@ -48,56 +49,48 @@ export interface FAQItem {
   answer: string;
 }
 
+// ─── SINGLE SOURCE OF TRUTH: SERVICES ────────────────────────────
 export const servicesData: ServiceItem[] = [
   {
     id: "content-strategy",
+    number: "01",
     title: "Content Strategy",
-    description: "Clear topics, hooks and formats built around what your audience actually wants to watch.",
+    description: "Clear topics, hooks and formats built around what your audience actually wants to engage with.",
     shortDescription: "Clear direction for what to create, who it serves, and why it matters.",
     features: ["Audience intent mapping", "Format blueprints", "Hook validation frameworks"]
   },
   {
-    id: "script-writing",
+    id: "scriptwriting",
+    number: "02",
     title: "Scriptwriting",
     description: "Structured hooks, pacing and storytelling that give viewers a reason to stay.",
     shortDescription: "Structured scripts designed to hook attention and hold it.",
     features: ["Hook variation design", "Retention pacing markers", "Visual direction notes"]
   },
   {
-    id: "long-form-editing",
-    title: "Long-Form Editing",
-    description: "YouTube videos, interviews and podcasts shaped with purposeful pacing, sound and visual direction.",
-    shortDescription: "Raw footage shaped into polished, well-paced cinematic stories.",
-    features: ["Cinematic sound orchestrations", "Context-driven B-roll", "Color grading"]
+    id: "video-editing",
+    number: "03",
+    title: "Video Editing",
+    description: "Raw footage shaped into clear, polished and engaging visual stories with purposeful pacing and sound.",
+    shortDescription: "Raw footage shaped into clear, polished and engaging visual stories.",
+    features: ["Cinematic sound design", "Context-driven B-roll", "Color grading and pacing"]
   },
   {
-    id: "shorts-reels",
-    title: "Shorts and Reels",
-    description: "Vertical edits designed for fast attention without becoming noisy or disposable.",
-    shortDescription: "Sharp, platform-native edits built for immediate attention.",
-    features: ["Custom visual packaging", "Attention-retaining transitions", "Kinetic subtitle design"]
+    id: "brand-management",
+    number: "04",
+    title: "Brand Management",
+    description: "A consistent brand presence across content, platforms and communication — identity, tone, colours and direction.",
+    shortDescription: "A consistent brand presence across content, platforms and communication.",
+    features: ["Brand identity systems", "Visual consistency guidelines", "Cross-platform tone alignment"]
   },
   {
-    id: "podcast-production",
-    title: "Podcast Production",
-    description: "Clean multi-camera episodes, audio finishing and platform-ready short-form cutdowns.",
-    shortDescription: "Polished episodes with clean sound and natural conversational flow.",
-    features: ["Multi-cam sound leveling", "Filler word removal", "Highlights package"]
+    id: "website-making",
+    number: "05",
+    title: "Website Making",
+    description: "Distinctive, responsive websites built around the brand and its goals — from layout to launch.",
+    shortDescription: "Distinctive, responsive websites built around the brand and its goals.",
+    features: ["Responsive design systems", "Brand-aligned layouts", "Performance-optimised builds"]
   },
-  {
-    id: "visual-packaging",
-    title: "Visual Packaging",
-    description: "Thumbnails, titles, captions and supporting creative designed to make every release feel complete.",
-    shortDescription: "Thumbnails and visual systems designed to earn attention.",
-    features: ["Click-through-rate layout strategy", "Title psychology variations", "Visual brand kits"]
-  },
-  {
-    id: "channel-management",
-    title: "Channel Management",
-    description: "Publishing, metadata optimization and distribution across YouTube, Spotify, Apple and social feeds.",
-    shortDescription: "Consistent publishing, optimisation, and day-to-day channel care.",
-    features: ["SEO & description packaging", "Multi-platform scheduling", "Analytics & performance reports"]
-  }
 ];
 
 export const portfolioItems: PortfolioItem[] = [
@@ -112,9 +105,9 @@ export const portfolioItems: PortfolioItem[] = [
       metricVal: "100%",
       growth: "Optimized workflow pipeline"
     },
-    challenge: "Traditional technical complex ideas lost in standard edits, resulting in low viewer retention.",
-    solution: "A long-form content system designed to create one definitive story and repurpose it across formats.",
-    capabilities: ["Long-Form", "Short-Form", "Visual Packaging"],
+    challenge: "Complex technical ideas lost in standard edits, resulting in low viewer retention.",
+    solution: "A content system combining strategy, scripting and video editing into one clear production workflow.",
+    capabilities: ["Strategy", "Scriptwriting", "Video Editing"],
     mockVideoColor: "from-[#d7ff00]/20 to-black",
     duration: "10 mins",
     isConcept: true
@@ -123,34 +116,34 @@ export const portfolioItems: PortfolioItem[] = [
     id: "project-2",
     title: "Creator Launch System",
     creator: "Internal Concept Project",
-    category: "CREATOR LAUNCH SYSTEM",
-    platform: "YouTube",
+    category: "BRAND LAUNCH SYSTEM",
+    platform: "Multi-Channel",
     stats: {
       metricLabel: "Review Time",
       metricVal: "-50%",
       growth: "Streamlined cycles"
     },
-    challenge: "Long-form tech content dropping off quickly due to dry explanations.",
-    solution: "A publishing roadmap built to establish unique brand identities and launch channel systems.",
-    capabilities: ["Brand System", "Channel Setup", "Publishing"],
+    challenge: "Inconsistent brand presence across platforms weakening creator authority.",
+    solution: "A publishing roadmap built to establish unique brand identities and launch consistent content systems.",
+    capabilities: ["Brand Management", "Content Strategy", "Website Making"],
     mockVideoColor: "from-[#3478f6]/20 to-black",
     duration: "8 mins",
     isConcept: true
   },
   {
     id: "project-3",
-    title: "Podcast Content Loop",
+    title: "Content Production Loop",
     creator: "Internal Concept Project",
-    category: "PODCAST CONTENT LOOP",
-    platform: "Podcast",
+    category: "CONTENT PRODUCTION LOOP",
+    platform: "Multi-Channel",
     stats: {
       metricLabel: "Delivery Speed",
       metricVal: "<24h",
       growth: "Platform-optimized"
     },
-    challenge: "High-value business lectures generating zero organic platform footprint.",
-    solution: "A conversation repurposing engine converting master waveforms into distributed social clips.",
-    capabilities: ["Waveform Edit", "Clip Extraction", "Platform Loop"],
+    challenge: "High-value ideas generating zero organic traction due to scattered production.",
+    solution: "An end-to-end production loop converting raw ideas into polished, distributed content.",
+    capabilities: ["Video Editing", "Scriptwriting", "Brand Management"],
     mockVideoColor: "from-[#ff3b30]/20 to-black",
     duration: "60 secs",
     isConcept: true
@@ -238,24 +231,24 @@ export const testimonialsData: TestimonialItem[] = [
 
 export const faqData: FAQItem[] = [
   {
-    question: "What kind of content do you create?",
-    answer: "We create long-form videos, short-form clips, podcast edits, visual packaging, and content systems built for platforms like YouTube, Instagram, and more."
+    question: "What kind of work do you do?",
+    answer: "We offer content strategy, scriptwriting, video editing, brand management and website making — everything a creator or brand needs to build and maintain a strong content presence."
   },
   {
     question: "Can you help with strategy and scripts as well as editing?",
-    answer: "Yes. We can support the full flow — from content direction and scripting to editing, packaging, and rollout."
+    answer: "Yes. We can support the full flow — from content direction and scriptwriting to video editing, brand management and website development."
   },
   {
     question: "Do you work with creators, brands or both?",
-    answer: "Both. We work with creators building a stronger content engine and brands looking for sharper, more watchable media."
+    answer: "Both. We work with creators building a stronger content engine and brands looking for sharper, more consistent media and web presence."
   },
   {
     question: "How does the review process work?",
-    answer: "We keep reviews structured and simple. Once the first version is delivered, we gather feedback, refine the edit, and move quickly toward final delivery."
+    answer: "We keep reviews structured and simple. Once the first version is delivered, we gather feedback, refine the work, and move quickly toward final delivery."
   },
   {
-    question: "Can one long video be turned into multiple short clips?",
-    answer: "Absolutely. One strong long-form piece can often be repurposed into multiple shorts, reels, teasers, or social cutdowns."
+    question: "Do you build websites as well?",
+    answer: "Yes. We design and build distinctive, responsive websites that are aligned with your brand identity and optimised for performance."
   },
   {
     question: "How do we start a project?",
@@ -264,7 +257,7 @@ export const faqData: FAQItem[] = [
 ];
 
 export const siteMetadata = {
-  title: "Content Dost — Strategy, Scripts and Video Editing",
-  description: "Content Dost helps creators and growing brands turn raw ideas into polished long-form videos, reels, podcasts and content systems.",
+  title: "Content Dost — Strategy, Scripts, Video Editing, Brand Management & Websites",
+  description: "Content Dost helps creators and growing brands with content strategy, scriptwriting, video editing, brand management and website making.",
   contactEmail: "hello@contentdost.agency"
 };

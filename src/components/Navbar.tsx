@@ -3,12 +3,12 @@ import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { getLenisInstance } from '../lib/smoothScroll';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-const NAV_LINKS = [
-  { label: 'Services', href: '#services' },
-  { label: 'Work', href: '#work' },
-  { label: 'Process', href: '#process' },
-  { label: 'Results', href: '#results' },
-  { label: 'FAQ', href: '#faq' },
+const navigationItems = [
+  { label: "Services", id: "services", href: "#services" },
+  { label: "Work", id: "work", href: "#work" },
+  { label: "Process", id: "process", href: "#process" },
+  { label: "Results", id: "results", href: "#results" },
+  { label: "FAQ", id: "faq", href: "#faq" },
 ];
 
 export default function Navbar() {
@@ -19,13 +19,14 @@ export default function Navbar() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const linkRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
+  const isScrollingToRef = useRef<string | null>(null);
   
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
-      const isPostHeroHash = hash && hash !== '#' && NAV_LINKS.some(link => link.href === hash);
+      const isPostHeroHash = hash && hash !== '#' && navigationItems.some(link => link.href === hash);
       const isScrolledPastHero = window.scrollY > window.innerHeight - 100;
       return !!(isPostHeroHash || isScrolledPastHero);
     }
@@ -35,7 +36,11 @@ export default function Navbar() {
   const isVisibleRef = useRef(isVisible);
   isVisibleRef.current = isVisible;
 
-  // Observer for Hero Sentinel boundary
+  const prefersReducedMotion = typeof window !== 'undefined'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
+
+  // 1. Observer for Hero Sentinel boundary (with hysteresis)
   useEffect(() => {
     let observer: IntersectionObserver | null = null;
     let frameId: number;
@@ -50,14 +55,14 @@ export default function Navbar() {
       observer = new IntersectionObserver(
         ([entry]) => {
           const sentinelTop = entry.boundingClientRect.top;
-          const passedHero = !entry.isIntersecting && sentinelTop < 0;
-          if (passedHero !== isVisibleRef.current) {
-            setIsVisible(passedHero);
+          const isPastHero = !entry.isIntersecting && sentinelTop < 0;
+          if (isPastHero !== isVisibleRef.current) {
+            setIsVisible(isPastHero);
           }
         },
         {
           threshold: 0,
-          rootMargin: '8px 0px 0px 0px',
+          rootMargin: '20px 0px 20px 0px',
         }
       );
       observer.observe(sentinel);
@@ -71,33 +76,63 @@ export default function Navbar() {
     };
   }, []);
 
-  // 1. Scrollspy Observer with centered vertical band
+  // 2. Stable Scrollspy Observer using activation band and tracking all sections
   useEffect(() => {
-    const sections = NAV_LINKS
-      .map(({ href }) => document.getElementById(href.slice(1)))
+    const sectionStates: { [key: string]: { isIntersecting: boolean; top: number } } = {};
+    
+    const sections = navigationItems
+      .map(({ id }) => document.getElementById(id))
       .filter((section): section is HTMLElement => Boolean(section));
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Track the intersecting element closest to the middle of the screen
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => {
-            const aRect = a.target.getBoundingClientRect();
-            const bRect = b.target.getBoundingClientRect();
-            const center = window.innerHeight / 2;
-            const aDist = Math.abs(aRect.top + aRect.height / 2 - center);
-            const bDist = Math.abs(bRect.top + bRect.height / 2 - center);
-            return aDist - bDist;
-          })[0];
+        entries.forEach((entry) => {
+          sectionStates[entry.target.id] = {
+            isIntersecting: entry.isIntersecting,
+            top: entry.boundingClientRect.top
+          };
+        });
 
-        if (visible) {
-          setActiveSection(visible.target.id);
+        // Skip scrollspy updates if we are actively smooth scrolling to a target section
+        if (isScrollingToRef.current !== null) return;
+
+        // Force 'faq' if scroll position is at the very bottom of the document
+        const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+        if (isAtBottom) {
+          setActiveSection('faq');
+          return;
+        }
+
+        // Force empty active section if we are scrolled back to the top
+        if (window.scrollY < 100) {
+          setActiveSection('');
+          return;
+        }
+
+        // Determine dominant section based on closest section top to our activation band (30% from viewport top)
+        const activationLine = window.innerHeight * 0.3;
+        let dominantSectionId = '';
+        let minDistance = Infinity;
+
+        sections.forEach((section) => {
+          const state = sectionStates[section.id];
+          if (state && state.isIntersecting) {
+            const rect = section.getBoundingClientRect();
+            const distance = Math.abs(rect.top - activationLine);
+            if (distance < minDistance) {
+              minDistance = distance;
+              dominantSectionId = section.id;
+            }
+          }
+        });
+
+        if (dominantSectionId) {
+          setActiveSection(dominantSectionId);
         }
       },
       {
-        rootMargin: '-25% 0px -35% 0px',
-        threshold: [0, 0.1, 0.2]
+        rootMargin: '-10% 0px -40% 0px',
+        threshold: [0, 0.1, 0.2, 0.5, 0.8]
       }
     );
 
@@ -105,7 +140,7 @@ export default function Navbar() {
     return () => observer.disconnect();
   }, []);
 
-  // 2. Track window scroll state
+  // 3. Track scroll state for scroller background styling
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -115,7 +150,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 3. Glide Indicator calculations
+  // 4. Glide Indicator calculations
   const updateIndicator = useCallback(() => {
     const activeLink = linkRefs.current[activeSection];
     if (activeLink) {
@@ -133,7 +168,16 @@ export default function Navbar() {
     updateIndicator();
   }, [updateIndicator]);
 
-  // Update measurements on resize
+  // Remeasure after custom fonts load to prevent layout shift offset bugs
+  useEffect(() => {
+    if (typeof document !== 'undefined' && 'fonts' in document) {
+      document.fonts.ready.then(() => {
+        updateIndicator();
+      });
+    }
+  }, [updateIndicator]);
+
+  // Remeasure on window resize
   useEffect(() => {
     if (typeof ResizeObserver === 'undefined') return;
     const navEl = document.querySelector('.navbar-links');
@@ -146,16 +190,30 @@ export default function Navbar() {
     return () => resizeObserver.disconnect();
   }, [updateIndicator]);
 
-  // 4. Click Smooth Scroll with URL Hash sync
+  // 5. Click Smooth Scroll with URL Hash sync
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
+    e.stopPropagation(); // Avoid triggering document-level scroll listeners
+
     const targetId = href.slice(1);
     const targetElement = document.getElementById(targetId);
     
     if (targetElement) {
+      isScrollingToRef.current = targetId;
+      setActiveSection(targetId);
+      
+      const onScrollComplete = () => {
+        setTimeout(() => {
+          isScrollingToRef.current = null;
+        }, 100);
+      };
+
       const lenis = getLenisInstance();
       if (lenis) {
-        lenis.scrollTo(targetElement, { offset: -90 });
+        lenis.scrollTo(targetElement, { 
+          offset: -90,
+          onComplete: onScrollComplete
+        });
       } else {
         const offset = 90;
         const bodyRect = document.body.getBoundingClientRect().top;
@@ -167,13 +225,44 @@ export default function Navbar() {
           top: offsetPosition,
           behavior: 'smooth'
         });
+        setTimeout(onScrollComplete, 800);
       }
-      setActiveSection(targetId);
+      
       window.history.pushState(null, '', href);
     }
   };
 
-  // 5. Scroll lock when mobile menu is open
+  // Sync hash navigation on browser Back and Forward history navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash && hash !== '#') {
+        const targetId = hash.slice(1);
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          isScrollingToRef.current = targetId;
+          setActiveSection(targetId);
+          
+          const lenis = getLenisInstance();
+          if (lenis) {
+            lenis.scrollTo(targetElement, {
+              offset: -90,
+              immediate: true
+            });
+          }
+          setTimeout(() => {
+            isScrollingToRef.current = null;
+          }, 200);
+        }
+      } else if (hash === '' || hash === '#') {
+        setActiveSection('');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // 6. Scroll lock when mobile menu drawer is open
   useEffect(() => {
     const lenis = getLenisInstance();
     if (mobileMenuOpen) {
@@ -193,7 +282,7 @@ export default function Navbar() {
     };
   }, [mobileMenuOpen]);
 
-  // 6. Trap focus in mobile drawer
+  // 7. Focus trapping for accessibility in mobile drawer
   useEffect(() => {
     if (!mobileMenuOpen) return;
     const focusable = drawerRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
@@ -220,6 +309,28 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileMenuOpen]);
 
+  // 8. Desktop Pointer Tilt Effect
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if ('ontouchstart' in window || prefersReducedMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+
+    const tiltX = -((y / (rect.height / 2)) * 0.4);
+    const tiltY = (x / (rect.width / 2)) * 0.4;
+    const shiftX = (x / (rect.width / 2)) * 2;
+
+    e.currentTarget.style.setProperty('--nav-tilt-x', `${tiltX}deg`);
+    e.currentTarget.style.setProperty('--nav-tilt-y', `${tiltY}deg`);
+    e.currentTarget.style.setProperty('--nav-shift-x', `${shiftX}px`);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
+    e.currentTarget.style.setProperty('--nav-tilt-x', '0deg');
+    e.currentTarget.style.setProperty('--nav-tilt-y', '0deg');
+    e.currentTarget.style.setProperty('--nav-shift-x', '0px');
+  };
+
   const closeMenu = () => setMobileMenuOpen(false);
 
   return (
@@ -227,6 +338,8 @@ export default function Navbar() {
       <header className="site-navbar-shell">
         <div 
           className={`site-navbar-reveal ${isScrolled ? 'site-navbar-reveal--scrolled' : ''} ${isVisible ? 'site-navbar-reveal--visible' : ''}`}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         >
           <div className="navbar-glass-surface" />
           <div className="navbar-edge-sheen" />
@@ -239,6 +352,7 @@ export default function Navbar() {
             tabIndex={isVisible ? undefined : -1}
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               const lenis = getLenisInstance();
               if (lenis) lenis.scrollTo(0);
               else window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -276,13 +390,13 @@ export default function Navbar() {
           {/* Desktop Centered Links */}
           <div className="navbar-links-chassis">
             <nav className="navbar-links" aria-label="Primary navigation">
-              {NAV_LINKS.map((link) => {
-                const isActive = activeSection === link.href.slice(1);
+              {navigationItems.map((link) => {
+                const isActive = activeSection === link.id;
                 return (
                   <a
                     key={link.label}
                     href={link.href}
-                    ref={(el) => { linkRefs.current[link.href.slice(1)] = el; }}
+                    ref={(el) => { linkRefs.current[link.id] = el; }}
                     onClick={(e) => handleLinkClick(e, link.href)}
                     className={`navbar-link ${isActive ? 'navbar-link--active' : ''}`}
                     aria-current={isActive ? 'location' : undefined}
@@ -354,8 +468,8 @@ export default function Navbar() {
         </div>
 
         <nav className="mobile-drawer-nav" aria-label="Mobile navigation">
-          {NAV_LINKS.map((link) => {
-            const isActive = activeSection === link.href.slice(1);
+          {navigationItems.map((link) => {
+            const isActive = activeSection === link.id;
             return (
               <a
                 key={link.label}

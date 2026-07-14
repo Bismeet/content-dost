@@ -20,7 +20,7 @@ export default function FAQ() {
             Common <em className="font-editorial" style={{ fontWeight: 400 }}>questions.</em>
           </h2>
           <p className="faq-intro-text">
-            Frequently asked questions about our process, editing style, and retainers.
+            Frequently asked questions about our process, services, and how we work.
           </p>
         </div>
 

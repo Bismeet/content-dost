@@ -1,10 +1,9 @@
 export const SERVICE_NAMES = [
   { label: 'Content Strategy', id: 'need-strategy' },
   { label: 'Scriptwriting', id: 'need-scripts' },
-  { label: 'Long-Form Editing', id: 'need-long' },
-  { label: 'Shorts & Reels', id: 'need-shorts' },
-  { label: 'Podcast Production', id: 'need-podcast' },
-  { label: 'Visual Packaging (Thumbnails)', id: 'need-thumb' },
+  { label: 'Video Editing', id: 'need-editing' },
+  { label: 'Brand Management', id: 'need-brand' },
+  { label: 'Website Making', id: 'need-website' },
 ] as const;
 
 export type ServiceNameLabel = typeof SERVICE_NAMES[number]['label'];
