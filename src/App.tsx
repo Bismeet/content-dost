@@ -22,6 +22,7 @@ export default function App() {
 
         <main>
           <HeroScroll />
+          <div id="hero-sentinel" style={{ height: '1px', width: '100%', pointerEvents: 'none' }} />
 
           <div className="post-hero-site">
             <ShootingStarsBackground />

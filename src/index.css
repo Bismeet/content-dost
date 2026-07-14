@@ -184,9 +184,9 @@ p { color: var(--muted); line-height: 1.65; letter-spacing: -.008em; }
 .post-hero-effects--reduced .editorial-decor { transform: none !important; }
 
 /* Protected sequence geometry. */
-.hero-sequence { position: relative; width: 100%; height: 100dvh; min-height: 100vh; overflow: visible; }
+.hero-sequence { position: relative; width: 100%; height: 100svh; min-height: 100svh; overflow: visible; }
 
-.hero-sequence-viewport { position: relative; width: 100%; height: 100dvh; min-height: 100vh; overflow: hidden; isolation: isolate; }
+.hero-sequence-viewport { position: relative; width: 100%; height: 100svh; min-height: 100svh; overflow: hidden; isolation: isolate; }
 .hero-sequence-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 .hero-sequence-canvas[hidden] { display: none; }
 .pixi-hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
@@ -296,13 +296,13 @@ p { color: var(--muted); line-height: 1.65; letter-spacing: -.008em; }
   box-shadow: 
     0 16px 40px rgba(0, 0, 0, 0.28), 
     inset 0 1px 0 rgba(255, 255, 255, 0.015);
-  opacity: 0;
-  visibility: hidden;
-  transform: translate(-50%, -18px) rotateX(var(--nav-tilt-x, 0deg)) rotateY(var(--nav-tilt-y, 0deg)) translate3d(var(--nav-shift-x, 0px), 0, 0);
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0px) rotateX(var(--nav-tilt-x, 0deg)) rotateY(var(--nav-tilt-y, 0deg)) translate3d(var(--nav-shift-x, 0px), 0, 0);
   transform-style: preserve-3d;
   perspective: 1000px;
-  pointer-events: none;
-  z-index: 100;
+  pointer-events: auto;
+  z-index: 1000;
   transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -312,6 +312,13 @@ p { color: var(--muted); line-height: 1.65; letter-spacing: -.008em; }
   box-shadow: 
     0 20px 48px rgba(0, 0, 0, 0.45), 
     inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.site-navbar--hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translate(-50%, -48px) rotateX(var(--nav-tilt-x, 0deg)) rotateY(var(--nav-tilt-y, 0deg)) translate3d(var(--nav-shift-x, 0px), 0, 0) !important;
+  pointer-events: none !important;
 }
 
 .navbar-glass-surface {
@@ -344,19 +351,19 @@ p { color: var(--muted); line-height: 1.65; letter-spacing: -.008em; }
 }
 
 .navbar-brand-icon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  color: var(--cine-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   filter: drop-shadow(0 0 6px rgba(244, 185, 66, 0.2));
   transition: transform 0.3s ease, filter 0.3s ease;
 }
 
 .navbar-brand:hover .navbar-brand-icon {
-  transform: translateX(1.5px) scale(1.02);
-  filter: drop-shadow(0 0 10px rgba(244, 185, 66, 0.38));
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 8px rgba(244, 185, 66, 0.3));
 }
 
 .navbar-brand-text {
@@ -605,6 +612,10 @@ p { color: var(--muted); line-height: 1.65; letter-spacing: -.008em; }
     padding: 6px 10px 6px 14px;
     border-radius: 16px;
   }
+  .navbar-brand-icon {
+    width: 36px;
+    height: 36px;
+  }
   .navbar-links-chassis {
     display: none;
   }
@@ -628,7 +639,7 @@ p { color: var(--muted); line-height: 1.65; letter-spacing: -.008em; }
 }
 @media (max-width: 430px) {
   .navbar-brand { gap: 4px; }
-  .navbar-brand-icon { width: 24px; }
+  .navbar-brand-icon { width: 32px; height: 32px; }
   .navbar-brand-text { font-size: .7rem; }
   .navbar-cta { padding-inline: 10px; font-size: .76rem; }
 }
@@ -892,16 +903,7 @@ p {
 .navbar-brand-text span {
   color: var(--accent-violet) !important;
 }
-.navbar-brand-icon {
-  background: linear-gradient(135deg, #8e7dff, #62a8ff) !important;
-  color: white !important;
-  border-radius: 50% !important;
-  width: 32px !important;
-  height: 32px !important;
-  display: grid !important;
-  place-items: center !important;
-  box-shadow: var(--shadow-raised-sm) !important;
-}
+
 
 /* Navbar CTA */
 .navbar-cta {

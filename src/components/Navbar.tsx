@@ -5,8 +5,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 const NAV_LINKS = [
   { label: 'Services', href: '#services' },
-  { label: 'Process', href: '#process' },
   { label: 'Work', href: '#work' },
+  { label: 'Process', href: '#process' },
   { label: 'Results', href: '#results' },
   { label: 'FAQ', href: '#faq' },
 ];
@@ -21,6 +21,53 @@ export default function Navbar() {
   const linkRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      return !!(hash && hash !== '#');
+    }
+    return false;
+  });
+
+  const isVisibleRef = useRef(isVisible);
+  isVisibleRef.current = isVisible;
+
+  const prefersReducedMotion = typeof window !== 'undefined'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
+
+  // Observer for Hero Sentinel boundary
+  useEffect(() => {
+    let observer: IntersectionObserver | null = null;
+    let frameId: number;
+
+    const setupObserver = () => {
+      const sentinel = document.getElementById('hero-sentinel');
+      if (!sentinel) {
+        frameId = requestAnimationFrame(setupObserver);
+        return;
+      }
+
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          const isPastHero = entry.isIntersecting || entry.boundingClientRect.top < 0;
+          if (isPastHero !== isVisibleRef.current) {
+            setIsVisible(isPastHero);
+          }
+        },
+        { rootMargin: '0px 0px 0px 0px' }
+      );
+      observer.observe(sentinel);
+    };
+
+    setupObserver();
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      observer?.disconnect();
+    };
+  }, []);
 
   // 1. Scrollspy Observer with centered vertical band
   useEffect(() => {
@@ -173,7 +220,7 @@ export default function Navbar() {
 
   // 7. Desktop Pointer Tilt effect (Restrained)
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if ('ontouchstart' in window) return;
+    if ('ontouchstart' in window || prefersReducedMotion) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
@@ -198,7 +245,7 @@ export default function Navbar() {
   return (
     <>
       <header 
-        className={`site-navbar ${isScrolled ? 'site-navbar--scrolled' : ''}`}
+        className={`site-navbar ${isScrolled ? 'site-navbar--scrolled' : ''} ${isVisible ? '' : 'site-navbar--hidden'}`}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
@@ -210,6 +257,7 @@ export default function Navbar() {
           href="#" 
           className="navbar-brand" 
           aria-label="Content Dost home"
+          tabIndex={isVisible ? undefined : -1}
           onClick={(e) => {
             e.preventDefault();
             const lenis = getLenisInstance();
@@ -220,8 +268,27 @@ export default function Navbar() {
           }}
         >
           <span className="navbar-brand-icon" aria-hidden="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 4.4v15.2L19 12 6 4.4Z" />
+            <svg width="100%" height="100%" viewBox="80 95 345 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="navIvoryGrad" x1="246" y1="106" x2="246" y2="406" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#F5F2EB" />
+                  <stop offset="100%" stop-color="#DCD8CD" />
+                </linearGradient>
+                <linearGradient id="navGoldGrad" x1="266" y1="106" x2="266" y2="406" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFD066" />
+                  <stop offset="100%" stop-color="#D47A1F" />
+                </linearGradient>
+              </defs>
+              {/* Left Ivory Segment */}
+              <path d="M 246 106 A 150 150 0 0 0 246 406 L 246 356 A 100 100 0 0 1 246 156 Z" fill="url(#navIvoryGrad)" />
+              {/* Right Gold Segment */}
+              <path d="M 266 106 L 266 156 A 100 100 0 0 1 266 356 L 266 406 A 150 150 0 0 0 266 106 Z" fill="url(#navGoldGrad)" />
+              {/* Center Play Triangle */}
+              <path d="M 235 222 C 235 215 241 215 245 218 L 289 252 C 293 255 293 257 289 260 L 245 294 C 241 297 235 297 235 290 Z" fill="url(#navGoldGrad)" />
+              {/* Sparkles */}
+              <path d="M 135 130 Q 160 130 160 105 Q 160 130 185 130 Q 160 130 160 155 Q 160 130 135 130 Z" fill="#FFD066" />
+              <path d="M 92 185 Q 110 185 110 167 Q 110 185 128 185 Q 110 185 110 203 Q 110 185 92 185 Z" fill="#ADC6FF" />
+              <circle cx="120" cy="230" r="5.5" fill="#FFD066" />
             </svg>
           </span>
           <span className="navbar-brand-text">Content <span>Dost</span></span>
@@ -240,6 +307,7 @@ export default function Navbar() {
                   onClick={(e) => handleLinkClick(e, link.href)}
                   className={`navbar-link ${isActive ? 'navbar-link--active' : ''}`}
                   aria-current={isActive ? 'location' : undefined}
+                  tabIndex={isVisible ? undefined : -1}
                 >
                   {link.label}
                 </a>
@@ -270,7 +338,7 @@ export default function Navbar() {
 
         {/* Right CTA / Menu Button */}
         <div className="navbar-cta-wrap">
-          <a href="#contact" className="navbar-cta">
+          <a href="#contact" className="navbar-cta" tabIndex={isVisible ? undefined : -1}>
             <span className="navbar-cta-desktop">Start a project</span>
             <span className="navbar-cta-mobile">Start project</span>
             <ArrowUpRight size={15} className="cta-arrow-icon" aria-hidden="true" />
@@ -283,6 +351,7 @@ export default function Navbar() {
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
+            tabIndex={isVisible ? undefined : -1}
           >
             <Menu size={19} aria-hidden="true" />
           </button>

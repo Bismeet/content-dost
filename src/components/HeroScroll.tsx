@@ -79,8 +79,6 @@ export default function HeroScroll() {
   const fallbackCanvasRef = useRef<HTMLCanvasElement>(null);
   const sequenceRendererRef = useRef<HeroSequenceRenderer | null>(null);
 
-  // Navbar visibility reference
-  const isNavbarVisibleRef = useRef<boolean>(false);
 
   // States
   const [isFirstFrameLoaded, setIsFirstFrameLoaded] = useState(false);
@@ -88,14 +86,8 @@ export default function HeroScroll() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   
   // Real scroll progress for overlay rendering
-  const [scrollVal, setScrollVal] = useState(0);
   const scrollValRef = useRef(0);
-
-  // Paper overlay references & state
-  const paperOverlayRef = useRef<HTMLDivElement>(null);
-  const messageContentRef = useRef<HTMLDivElement>(null);
-  const lastMessageIndexRef = useRef<number>(-1);
-  const [activeMessageIndex, setActiveMessageIndex] = useState<number>(-1);
+  const viewportDimensionsRef = useRef<{ width: number; height: number } | null>(null);
 
   // Detect reduced-motion preference
   useEffect(() => {
@@ -113,13 +105,28 @@ export default function HeroScroll() {
     sequenceRendererRef.current?.requestFrame(frameIndex);
   };
 
+  const updateCachedDimensions = () => {
+    const viewport = heroViewportRef.current;
+    if (!viewport) return;
+    const rect = viewport.getBoundingClientRect();
+    viewportDimensionsRef.current = {
+      width: rect.width,
+      height: rect.height,
+    };
+  };
+
   // Preserve the existing paper-aligned HTML layout calculations.
   const updatePaperLayout = (progress = scrollValRef.current) => {
     const viewport = heroViewportRef.current;
     if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
-    const viewportWidth = rect.width;
-    const viewportHeight = rect.height;
+
+    if (!viewportDimensionsRef.current) {
+      updateCachedDimensions();
+    }
+    const dims = viewportDimensionsRef.current;
+    if (!dims) return;
+    const viewportWidth = dims.width;
+    const viewportHeight = dims.height;
 
     // Source frame dimensions
     const sourceWidth = 1920;
@@ -151,7 +158,9 @@ export default function HeroScroll() {
   };
 
   useEffect(() => {
+    updateCachedDimensions();
     const handleResize = () => {
+      updateCachedDimensions();
       updatePaperLayout();
     };
     window.addEventListener('resize', handleResize);
@@ -213,11 +222,15 @@ export default function HeroScroll() {
   // GSAP ScrollTrigger layout pinning logic
   useLayoutEffect(() => {
     if (prefersReducedMotion) {
-      // If prefers-reduced-motion is active, make sure navbar is shown immediately
-      gsap.to('.site-navbar', {
+      // If prefers-reduced-motion is active, make sure elements are at their final state and navbar is visible
+      gsap.set('.js-hero-opening', { opacity: 0, y: -24 });
+      gsap.set('.js-paper-overlay', { opacity: 0 });
+      gsap.set('.hero-final-veil', { opacity: 1 });
+      gsap.set('.hero-final-reveal', { opacity: 1, y: 0, xPercent: -50, yPercent: -50 });
+      gsap.set('.hero-final-actions', { opacity: 1, y: 0 });
+      gsap.set('.site-navbar', {
         autoAlpha: 1,
         y: 0,
-        duration: 0.1,
         pointerEvents: 'auto',
         overwrite: true,
       });
@@ -229,129 +242,187 @@ export default function HeroScroll() {
 
     if (!section || !rendererViewport) return;
 
+    // Set initial states of DOM components before timeline plays
+    gsap.set('.js-hero-opening', { opacity: 1, y: 0 });
+    gsap.set('.js-paper-overlay', { opacity: 0 });
+    gsap.set('.js-message-0', { opacity: 0, y: 15, visibility: 'hidden' });
+    gsap.set('.js-message-1', { opacity: 0, y: 15, visibility: 'hidden' });
+    gsap.set('.js-message-2', { opacity: 0, y: 15, visibility: 'hidden' });
+    gsap.set('.hero-final-veil', { opacity: 0 });
+    gsap.set('.hero-final-reveal', { opacity: 0, y: 24, xPercent: -50, yPercent: -50 });
+    gsap.set('.hero-final-actions', { opacity: 0, y: 12 });
+
     const frameState = {
       progress: 0,
     };
 
-    // Navbar animation helper scopes
-    const showNavbar = () => {
-      gsap.to('.site-navbar', {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.65,
-        ease: 'power3.out',
-        pointerEvents: 'auto',
-        overwrite: true,
-      });
-    };
-
-    const hideNavbar = () => {
-      gsap.to('.site-navbar', {
-        autoAlpha: 0,
-        y: -18,
-        duration: 0.35,
-        ease: 'power2.out',
-        pointerEvents: 'none',
-        overwrite: true,
-      });
-    };
-
     const context = gsap.context(() => {
-      const animation = gsap.to(frameState, {
-        progress: 1,
-        ease: 'none',
+      // Create master timeline
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: 'top top',
-          end: () => `+=${window.innerWidth < 768 ? window.innerHeight * 3.5 : window.innerHeight * 5.5}`,
+          end: () => {
+            const h = window.innerHeight;
+            if (window.innerWidth < 768) {
+              return `+=${h * 1.3}`; // mobile: 130vh
+            } else if (window.innerWidth < 1024) {
+              return `+=${h * 1.8}`; // tablet: 180vh
+            } else {
+              return `+=${h * 2.2}`; // desktop: 220vh
+            }
+          },
           pin: true,
           pinSpacing: true,
-          scrub: 0.15,
+          scrub: 0.75, // smooth scrub response
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
-            if (!isFirstFrameLoaded) return;
-            const scrollProgress = self.progress;
-
-            // Map progress: First 92% scrub sequence. Final 8% holds last frame.
-            const animationProgress = Math.min(scrollProgress / 0.92, 1);
-            const frameIndex = Math.min(
-              TOTAL_FRAMES - 1,
-              Math.floor(animationProgress * (TOTAL_FRAMES - 1))
-            );
-
-            requestFrameRender(frameIndex);
-            
-            // Track scroll progress without state overhead
-            scrollValRef.current = scrollProgress;
-            setScrollVal(scrollProgress);
-            updatePaperLayout(scrollProgress);
-
-            // Active message stable change detector
-            const nextIndex =
-              scrollProgress >= 0.20 && scrollProgress < 0.36
-                ? 0
-                : scrollProgress >= 0.36 && scrollProgress < 0.55
-                  ? 1
-                  : scrollProgress >= 0.55 && scrollProgress < 0.75
-                    ? 2
-                    : -1;
-
-            if (nextIndex !== lastMessageIndexRef.current) {
-              lastMessageIndexRef.current = nextIndex;
-              setActiveMessageIndex(nextIndex);
-            }
-
-            // Navbar show/hide threshold triggers (Show at >= 0.92, hide below 0.88 hysteresis window)
-            const shouldBeVisible = scrollProgress >= 0.92 || (isNavbarVisibleRef.current && scrollProgress >= 0.88);
-            
-            if (shouldBeVisible !== isNavbarVisibleRef.current) {
-              isNavbarVisibleRef.current = shouldBeVisible;
-              if (shouldBeVisible) {
-                showNavbar();
-              } else {
-                hideNavbar();
-              }
-            }
+            // Track scroll progress internally & update positioning
+            scrollValRef.current = self.progress;
+            updatePaperLayout(self.progress);
           },
           onLeave: () => {
-            requestFrameRender(TOTAL_FRAMES - 1);
-            
             scrollValRef.current = 1;
-            setScrollVal(1);
             updatePaperLayout(1);
-            if (lastMessageIndexRef.current !== -1) {
-              lastMessageIndexRef.current = -1;
-              setActiveMessageIndex(-1);
-            }
-
-            if (!isNavbarVisibleRef.current) {
-              isNavbarVisibleRef.current = true;
-              showNavbar();
-            }
-          },
-          onEnterBack: () => {
-            requestFrameRender(TOTAL_FRAMES - 1);
-          },
+          }
         },
       });
 
-      return () => {
-        animation.scrollTrigger?.kill();
-        animation.kill();
-      };
+      // 1. Frame sequence animation (entire timeline duration: 10)
+      tl.to(frameState, {
+        progress: 1,
+        ease: 'none',
+        duration: 9.2,
+        onUpdate: () => {
+          if (!isFirstFrameLoaded) return;
+          const frameIndex = Math.min(
+            TOTAL_FRAMES - 1,
+            Math.floor(frameState.progress * (TOTAL_FRAMES - 1))
+          );
+          requestFrameRender(frameIndex);
+        }
+      }, 0);
+
+      // 2. Opening copy fade out (Beat 01)
+      tl.to('.js-hero-opening', {
+        opacity: 0,
+        y: -24,
+        duration: 1.2
+      }, 0.8);
+
+      // 3. Paper overlay container fade in
+      tl.to('.js-paper-overlay', {
+        opacity: 1,
+        duration: 0.5
+      }, 1.8);
+
+      // 4. Message 0 (STRATEGY) (Beat 02 & 03)
+      tl.set('.js-message-0', { visibility: 'visible' }, 1.8);
+      tl.to('.js-message-0', { opacity: 1, y: 0, duration: 0.1 }, 1.8);
+      tl.fromTo('.js-message-0 .hero-paper-eyebrow', 
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        1.8
+      );
+      tl.fromTo('.js-message-0 .hero-paper-title',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        2.1
+      );
+      tl.fromTo('.js-message-0 .hero-paper-description',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        2.4
+      );
+      // Fade out Message 0
+      tl.to('.js-message-0', {
+        opacity: 0,
+        y: -15,
+        duration: 0.5
+      }, 3.6);
+      tl.set('.js-message-0', { visibility: 'hidden' }, 4.1);
+
+      // 5. Message 1 (SCRIPTWRITING) (Beat 04 & 05)
+      tl.set('.js-message-1', { visibility: 'visible' }, 4.1);
+      tl.to('.js-message-1', { opacity: 1, y: 0, duration: 0.1 }, 4.1);
+      tl.fromTo('.js-message-1 .hero-paper-eyebrow',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        4.1
+      );
+      tl.fromTo('.js-message-1 .hero-paper-title',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        4.4
+      );
+      tl.fromTo('.js-message-1 .hero-paper-description',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        4.7
+      );
+      // Fade out Message 1
+      tl.to('.js-message-1', {
+        opacity: 0,
+        y: -15,
+        duration: 0.5
+      }, 5.9);
+      tl.set('.js-message-1', { visibility: 'hidden' }, 6.4);
+
+      // 6. Message 2 (EDITING) (Beat 07 & 08)
+      tl.set('.js-message-2', { visibility: 'visible' }, 6.4);
+      tl.to('.js-message-2', { opacity: 1, y: 0, duration: 0.1 }, 6.4);
+      tl.fromTo('.js-message-2 .hero-paper-eyebrow',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        6.4
+      );
+      tl.fromTo('.js-message-2 .hero-paper-title',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        6.7
+      );
+      tl.fromTo('.js-message-2 .hero-paper-description',
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        7.0
+      );
+      // Fade out Message 2 and container
+      tl.to('.js-message-2', {
+        opacity: 0,
+        y: -15,
+        duration: 0.5
+      }, 8.0);
+      tl.set('.js-message-2', { visibility: 'hidden' }, 8.5);
+      tl.to('.js-paper-overlay', {
+        opacity: 0,
+        duration: 0.5
+      }, 8.0);
+
+      // 7. Final Reveal (Beat 09 & 10)
+      tl.fromTo('.hero-final-veil',
+        { opacity: 0 },
+        { opacity: 1, duration: 0.8 },
+        8.2
+      );
+      tl.fromTo('.hero-final-reveal',
+        { opacity: 0, y: 24, xPercent: -50, yPercent: -50 },
+        { opacity: 1, y: 0, xPercent: -50, yPercent: -50, duration: 0.8 },
+        8.2
+      );
+      tl.fromTo('.hero-final-actions',
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.6 },
+        8.7
+      );
+
+      // 8. Completed timeline end without hiding navbar
+
     }, section);
 
     // Initial layout sync once trigger binds
-    updatePaperLayout();
+    updatePaperLayout(0);
     ScrollTrigger.refresh();
-
-    // Set initial navbar hiding state
-    gsap.set('.site-navbar', {
-      autoAlpha: 0,
-      y: -18,
-      pointerEvents: 'none',
-    });
 
     // Initial hash navigation scroll bypass
     const hash = window.location.hash;
@@ -364,7 +435,6 @@ export default function HeroScroll() {
             immediate: true,
             offset: -96,
           });
-          isNavbarVisibleRef.current = true;
           gsap.to('.site-navbar', {
             autoAlpha: 1,
             y: 0,
@@ -390,41 +460,6 @@ export default function HeroScroll() {
     };
   }, [isFirstFrameLoaded, prefersReducedMotion]);
 
-  // ── Opacity helpers ──────────────────────────────────────────────
-  // Phase 1: Paper opening (0 – 0.22) → fades out 0.22–0.32
-  const getOpeningOpacity = () => {
-    if (prefersReducedMotion) return 0;
-    if (scrollVal <= 0.22) return 1;
-    if (scrollVal > 0.32) return 0;
-    return 1 - (scrollVal - 0.22) / 0.10;
-  };
-
-  // Paper overlay opacity calculation
-  const getPaperOverlayOpacity = () => {
-    if (prefersReducedMotion) return 0;
-    if (scrollVal < 0.20 || scrollVal >= 0.75) return 0;
-    if (scrollVal < 0.24) return (scrollVal - 0.20) / 0.04;
-    if (scrollVal > 0.70) return 1 - (scrollVal - 0.70) / 0.05;
-    return 1;
-  };
-
-  // Phase 3: Final Reveal
-  const getFinalTextOpacity = () => {
-    if (prefersReducedMotion) return 1;
-    if (scrollVal < 0.84) return 0;
-    return Math.min(1, (scrollVal - 0.84) / 0.05);
-  };
-
-  const getFinalCtaOpacity = () => {
-    if (prefersReducedMotion) return 1;
-    if (scrollVal < 0.92) return 0;
-    return Math.min(1, (scrollVal - 0.92) / 0.04);
-  };
-
-  // The interface veil belongs only to the final title-card phase.
-  const finalVeilOpacity = prefersReducedMotion ? 1 : scrollVal < 0.84 ? 0 : Math.min(1, (scrollVal - 0.84) / 0.08);
-
-  const lastActiveIndex = activeMessageIndex !== -1 ? activeMessageIndex : 0;
 
   return (
     <section ref={heroSectionRef} className="hero-sequence">
@@ -455,19 +490,16 @@ export default function HeroScroll() {
             <div
               className="hero-final-veil"
               style={{
-                opacity: finalVeilOpacity,
-                transition: 'opacity 600ms ease'
+                opacity: prefersReducedMotion ? 1 : 0
               }}
             />
 
             {/* ── Phase 1: Paper Opening ── */}
             <div
-              className="hero-paper-safe-area"
+              className="hero-paper-safe-area js-hero-opening"
               style={{
-                opacity: getOpeningOpacity(),
-                transform: `translateY(${scrollVal < 0.22 ? 0 : -16}px)`,
-                transition: 'opacity 700ms ease, transform 700ms ease',
-                pointerEvents: scrollVal < 0.22 && !prefersReducedMotion ? 'auto' : 'none'
+                opacity: prefersReducedMotion ? 0 : 1,
+                pointerEvents: 'none'
               }}
             >
               <div className="hero-opening-copy">
@@ -481,37 +513,44 @@ export default function HeroScroll() {
 
             {/* ── Phase 2: Paper-Bound Captions ── */}
             <div
-              ref={paperOverlayRef}
-              className="hero-paper-overlay"
+              className="hero-paper-overlay js-paper-overlay"
               style={{
-                opacity: getPaperOverlayOpacity(),
-                transition: 'opacity 300ms ease',
-                pointerEvents: activeMessageIndex !== -1 ? 'auto' : 'none'
+                opacity: 0,
+                pointerEvents: 'none'
               }}
-              aria-live="polite"
             >
-              <div ref={messageContentRef} className="hero-paper-message">
-                <span className="hero-paper-eyebrow">
-                  {MESSAGES[lastActiveIndex].eyebrow}
-                </span>
-                <p className="hero-paper-title">
-                  {MESSAGES[lastActiveIndex].title}
-                </p>
-                <p className="hero-paper-description">
-                  {window.innerWidth < 768
-                    ? MESSAGES[lastActiveIndex].mobileDescription
-                    : MESSAGES[lastActiveIndex].description}
-                </p>
-              </div>
+              {MESSAGES.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`hero-paper-message js-message-${idx}`}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    margin: 'auto',
+                    opacity: 0,
+                    visibility: 'hidden'
+                  }}
+                >
+                  <span className="hero-paper-eyebrow">
+                    {msg.eyebrow}
+                  </span>
+                  <p className="hero-paper-title">
+                    {msg.title}
+                  </p>
+                  <p className="hero-paper-description">
+                    {window.innerWidth < 768
+                      ? msg.mobileDescription
+                      : msg.description}
+                  </p>
+                </div>
+              ))}
             </div>
 
             {/* ── Phase 3: Final Reveal ── */}
             <div
               className="hero-final-reveal"
               style={{
-                opacity: getFinalTextOpacity(),
-                transform: `translate(-50%, -50%) translateY(${getFinalTextOpacity() > 0 ? '0' : '24px'})`,
-                transition: 'opacity 600ms ease, transform 600ms ease'
+                opacity: prefersReducedMotion ? 1 : 0
               }}
             >
               <p className="hero-final-eyebrow">Strategy · Script · Edit · Publish</p>
@@ -526,9 +565,7 @@ export default function HeroScroll() {
               <div
                 className="hero-final-actions"
                 style={{
-                  opacity: getFinalCtaOpacity(),
-                  transform: `translateY(${getFinalCtaOpacity() > 0 ? '0' : '12px'})`,
-                  transition: 'opacity 500ms ease, transform 500ms ease'
+                  opacity: prefersReducedMotion ? 1 : 0
                 }}
               >
                 <a href="#contact" className="btn-primary">
