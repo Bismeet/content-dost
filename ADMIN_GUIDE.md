@@ -47,6 +47,27 @@ Clicking any row in the table opens the **Lead Details** side panel:
 3. Click **Save Changes** to commit.
 
 ### 3.3 Soft Archiving
-- To delete or clean up the dashboard, click the **Archive** button.
-- An alert box will prompt you for confirmation.
-- Confirming updates the lead status to `archived`, removing it from the active listings. No records are deleted from the database.
+- To mark a lead as processed or completed in a business context, click the **Archive** button. This updates the lead's status to `archived`. It remains in the database and active metrics under "Total", but is removed from the default "Active Leads" view.
+
+### 3.4 Move to Trash
+- To remove spam, duplicate, or junk leads from the active dashboard completely, click **Move to Trash**.
+- A confirmation dialog will explain that the lead will be moved to the Trash view but can be restored later.
+- Moving a lead to Trash excludes it entirely from all active dashboard lists and statistics counters.
+
+---
+
+## 4. Trash & Lead Recovery
+
+### 4.1 Accessing the Trash Tab
+- A navigation tab selector at the top of the dashboard allows you to switch between the active **Leads** view and the **Trash** view.
+- The **Trash** tab displays a count badge showing how many leads are currently trashed.
+
+### 4.2 Restoring a Lead
+- Select a lead in the **Trash** list and click the **Restore Lead** button.
+- A confirmation dialog will appear. Confirming will clear the trash flags and return the lead to the active dashboard. All original status designations, budgets, and internal notes are fully preserved.
+
+### 4.3 Permanent Deletion
+- To permanently delete a lead, click **Permanently Delete** inside the Trash detail panel.
+- A destructive confirmation dialog will open. Because permanent deletion is irreversible and completely purges all client data and notes from the database, **you must type the exact word `DELETE` (in uppercase) to enable the confirmation button**.
+- Click the confirm button to execute the delete. Exactly one row is purged from the database. Active leads cannot be permanently deleted by bypassing this workflow.
+- No automatic cron cleanup currently runs; all trash items remain in the Trash indefinitely until manually reviewed and permanently deleted.

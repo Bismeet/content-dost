@@ -18,8 +18,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   // 2. Validate Methods
-  if (req.method !== 'GET' && req.method !== 'PATCH') {
-    res.setHeader('Allow', 'GET, PATCH');
+  if (req.method !== 'GET' && req.method !== 'PATCH' && req.method !== 'DELETE') {
+    res.setHeader('Allow', 'GET, PATCH, DELETE');
     return sendError(res, 405, 'Method Not Allowed');
   }
 
@@ -29,6 +29,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return sendError(res, 401, 'Unauthorized');
   }
 
+  res.setHeader('Cache-Control', 'no-store');
+
   const supabaseAdmin = getSupabaseAdminClient();
 
   // 4. Handle GET (Fetch single lead)
@@ -36,7 +38,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     try {
       const { data: lead, error: dbError } = await supabaseAdmin
         .from('leads')
-        .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, source, created_at, updated_at')
+        .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, source, created_at, updated_at, deleted_at')
         .eq('id', id)
         .single();
 
@@ -44,7 +46,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         return sendError(res, 404, 'Lead not found');
       }
 
-      return sendSuccess(res, 'Lead retrieved successfully', { lead });
+      // Map deleted_at to camelCase deletedAt for the client Lead type
+      const mappedLead = {
+        ...lead,
+        deletedAt: lead.deleted_at || null,
+      };
+
+      return sendSuccess(res, 'Lead retrieved successfully', { lead: mappedLead });
     } catch (err) {
       return sendGenericError(res, err);
     }
@@ -83,14 +91,19 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         .from('leads')
         .update(finalUpdate)
         .eq('id', id)
-        .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, created_at, updated_at')
+        .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, created_at, updated_at, deleted_at')
         .single();
 
       if (dbError || !updatedLead) {
         return sendError(res, 404, 'Lead not found or update failed');
       }
 
-      return sendSuccess(res, 'Lead updated successfully', { lead: updatedLead });
+      const mappedLead = {
+        ...updatedLead,
+        deletedAt: updatedLead.deleted_at || null,
+      };
+
+      return sendSuccess(res, 'Lead updated successfully', { lead: mappedLead });
 
     } catch (err: any) {
       const statusCode = err.statusCode || 500;
@@ -100,6 +113,48 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         return sendError(res, statusCode, message);
       }
 
+      return sendGenericError(res, err);
+    }
+  }
+
+  // 6. Handle DELETE (Permanently delete lead - must be in Trash already)
+  if (req.method === 'DELETE') {
+    // 6a. Origin Validation
+    const originHeader = req.headers.origin;
+    if (!validateOrigin(originHeader)) {
+      return sendError(res, 403, 'Forbidden origin');
+    }
+
+    try {
+      // Fetch lead first to check if it exists and check deleted_at status
+      const { data: leadCheck, error: fetchError } = await supabaseAdmin
+        .from('leads')
+        .select('id, deleted_at')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (fetchError || !leadCheck) {
+        return sendError(res, 404, 'Lead not found');
+      }
+
+      // Check if lead is active (deleted_at is null)
+      if (leadCheck.deleted_at === null) {
+        return sendError(res, 409, 'Cannot permanently delete an active lead. Move it to Trash first.');
+      }
+
+      // Perform the permanent deletion
+      const { error: deleteError } = await supabaseAdmin
+        .from('leads')
+        .delete()
+        .eq('id', id)
+        .not('deleted_at', 'is', null);
+
+      if (deleteError) {
+        return sendGenericError(res, deleteError);
+      }
+
+      return sendSuccess(res, 'Lead permanently deleted successfully');
+    } catch (err) {
       return sendGenericError(res, err);
     }
   }

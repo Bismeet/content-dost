@@ -14,6 +14,7 @@ export interface Lead {
   source: string;
   created_at: string;
   updated_at: string;
+  deletedAt?: string | null;
 }
 
 export interface PaginationMetadata {
@@ -40,6 +41,7 @@ export interface LeadStats {
   lost: number;
   spam: number;
   archived: number;
+  trashed: number;
 }
 
 export interface LeadStatsResponse {

@@ -17,45 +17,61 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return sendError(res, 401, 'Unauthorized');
     }
 
-    // 3. Query all counts in a single aggregation or parallel select statements
+    // 3. Query all counts in parallel using database count queries (head: true to avoid fetching rows)
     const supabaseAdmin = getSupabaseAdminClient();
-    
-    // We fetch counts for each status. In Supabase, doing a group by or count query is simple
-    const { data: statusCounts, error: dbError } = await supabaseAdmin
-      .from('leads')
-      .select('status');
 
-    if (dbError) {
-      return sendGenericError(res, dbError);
+    const [
+      totalRes,
+      newRes,
+      contactedRes,
+      qualifiedRes,
+      proposalRes,
+      wonRes,
+      lostRes,
+      spamRes,
+      archivedRes,
+      trashedRes
+    ] = await Promise.all([
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'new'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'contacted'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'qualified'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'proposal'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'won'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'lost'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'spam'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'archived'),
+      supabaseAdmin.from('leads').select('*', { count: 'exact', head: true }).not('deleted_at', 'is', null)
+    ]);
+
+    const errors = [
+      totalRes.error, newRes.error, contactedRes.error, qualifiedRes.error,
+      proposalRes.error, wonRes.error, lostRes.error, spamRes.error,
+      archivedRes.error, trashedRes.error
+    ].filter(Boolean);
+
+    if (errors.length > 0) {
+      return sendGenericError(res, errors[0]);
     }
 
-    // Initial counts object
+    const totalCount = totalRes.count || 0;
+    const spamCount = spamRes.count || 0;
+    const archivedCount = archivedRes.count || 0;
+    const activeTotal = totalCount - spamCount - archivedCount;
+
     const stats = {
-      total: 0,         // Global total including archived/spam
-      activeTotal: 0,   // Total excluding archived and spam
-      new: 0,
-      contacted: 0,
-      qualified: 0,
-      proposal: 0,
-      won: 0,
-      lost: 0,
-      spam: 0,
-      archived: 0,
+      total: totalCount,
+      activeTotal,
+      new: newRes.count || 0,
+      contacted: contactedRes.count || 0,
+      qualified: qualifiedRes.count || 0,
+      proposal: proposalRes.count || 0,
+      won: wonRes.count || 0,
+      lost: lostRes.count || 0,
+      spam: spamCount,
+      archived: archivedCount,
+      trashed: trashedRes.count || 0,
     };
-
-    if (statusCounts) {
-      statusCounts.forEach((row: { status: string }) => {
-        const s = row.status;
-        stats.total++;
-        if (s !== 'spam' && s !== 'archived') {
-          stats.activeTotal++;
-        }
-        
-        if (s in stats) {
-          (stats as any)[s]++;
-        }
-      });
-    }
 
     return sendSuccess(res, 'Lead statistics fetched successfully', { stats });
 

@@ -9,6 +9,7 @@ export function useLeads(initialFilters: {
   search: string;
   sort: string;
   order: 'asc' | 'desc';
+  trash?: 'active' | 'trashed';
 }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<LeadStats | null>(null);
@@ -21,6 +22,7 @@ export function useLeads(initialFilters: {
   const [filters, setFilters] = useState(initialFilters);
   const [isLoading, setIsLoading] = useState(true);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchLeads = useCallback(async () => {
@@ -36,6 +38,7 @@ export function useLeads(initialFilters: {
       if (filters.search) params.append('search', filters.search);
       params.append('sort', filters.sort);
       params.append('order', filters.order);
+      if (filters.trash) params.append('trash', filters.trash);
 
       const res = await apiFetch<LeadsResponse>(`/api/admin/leads?${params.toString()}`);
       if (res.success) {
@@ -67,7 +70,9 @@ export function useLeads(initialFilters: {
     id: string,
     updates: { status?: string; internalNotes?: string }
   ): Promise<boolean> => {
+    if (isMutating) return false;
     try {
+      setIsMutating(true);
       const res = await apiFetch<{ success: boolean }>(`/api/admin/leads/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
@@ -82,6 +87,71 @@ export function useLeads(initialFilters: {
     } catch (err: any) {
       alert(err.message || 'Failed to update lead');
       return false;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const moveLeadToTrash = async (id: string): Promise<boolean> => {
+    if (isMutating) return false;
+    try {
+      setIsMutating(true);
+      const res = await apiFetch<{ success: boolean }>(`/api/admin/leads/${id}/trash`, {
+        method: 'POST',
+      });
+      if (res.success) {
+        await fetchLeads();
+        await fetchStats();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      alert(err.message || 'Failed to move lead to Trash');
+      return false;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const restoreLead = async (id: string): Promise<boolean> => {
+    if (isMutating) return false;
+    try {
+      setIsMutating(true);
+      const res = await apiFetch<{ success: boolean }>(`/api/admin/leads/${id}/restore`, {
+        method: 'POST',
+      });
+      if (res.success) {
+        await fetchLeads();
+        await fetchStats();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      alert(err.message || 'Failed to restore lead');
+      return false;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const permanentlyDeleteLead = async (id: string): Promise<boolean> => {
+    if (isMutating) return false;
+    try {
+      setIsMutating(true);
+      const res = await apiFetch<{ success: boolean }>(`/api/admin/leads/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.success) {
+        await fetchLeads();
+        await fetchStats();
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      alert(err.message || 'Failed to permanently delete lead');
+      return false;
+    } finally {
+      setIsMutating(false);
     }
   };
 
@@ -96,6 +166,7 @@ export function useLeads(initialFilters: {
       if (filters.search) params.append('search', filters.search);
       params.append('sort', filters.sort);
       params.append('order', filters.order);
+      if (filters.trash) params.append('trash', filters.trash);
 
       const csvData = await apiFetch<string>(`/api/admin/leads/export?${params.toString()}`);
 
@@ -132,10 +203,14 @@ export function useLeads(initialFilters: {
     setFilters,
     isLoading,
     isStatsLoading,
+    isMutating,
     error,
     refetch: fetchLeads,
     refetchStats: fetchStats,
     updateLead,
+    moveLeadToTrash,
+    restoreLead,
+    permanentlyDeleteLead,
     softArchive,
     exportCsv,
   };

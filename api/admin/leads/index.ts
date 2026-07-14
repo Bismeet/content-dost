@@ -27,13 +27,20 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return sendError(res, 400, 'Invalid query parameters', parsedQuery.error.flatten());
     }
 
-    const { page, limit, status, search, sort, order } = parsedQuery.data;
+    const { page, limit, status, search, sort, order, trash } = parsedQuery.data;
 
     // 4. Query database via database administrator client
     const supabaseAdmin = getSupabaseAdminClient();
     let dbQuery = supabaseAdmin
       .from('leads')
-      .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, source, created_at, updated_at', { count: 'exact' });
+      .select('id, name, email, company, profile_url, budget, needs, project_details, status, internal_notes, source, created_at, updated_at, deleted_at', { count: 'exact' });
+
+    // Apply trash filter
+    if (trash === 'trashed') {
+      dbQuery = dbQuery.not('deleted_at', 'is', null);
+    } else {
+      dbQuery = dbQuery.is('deleted_at', null);
+    }
 
     // Apply filters
     if (status) {
@@ -54,9 +61,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     dbQuery = dbQuery.range(from, to);
 
     // Apply sorting (validated against fixed allowlist in schema)
-    dbQuery = dbQuery.order(sort, { ascending: order === 'asc' });
-    // Secondary deterministic sort
-    if (sort !== 'created_at') {
+    let sortField = sort;
+    if (trash === 'trashed' && sort === 'created_at') {
+      sortField = 'deleted_at';
+    }
+    dbQuery = dbQuery.order(sortField, { ascending: order === 'asc' });
+
+    // Secondary/tertiary deterministic sort
+    if (sortField !== 'created_at') {
       dbQuery = dbQuery.order('created_at', { ascending: false });
     }
     dbQuery = dbQuery.order('id', { ascending: true });
@@ -70,8 +82,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const totalCount = count || 0;
     const totalPages = Math.ceil(totalCount / limit);
 
+    // Map deleted_at to camelCase deletedAt for the client Lead type
+    const mappedLeads = (leads || []).map((lead) => ({
+      ...lead,
+      deletedAt: lead.deleted_at || null,
+    }));
+
     return sendSuccess(res, 'Leads fetched successfully', {
-      data: leads || [],
+      data: mappedLeads,
       pagination: {
         page,
         limit,

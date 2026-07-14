@@ -16,14 +16,17 @@ This guide provides step-by-step instructions to configure the Supabase database
    - **Pricing Plan**: Select the **Free** tier (or appropriate paid tier).
 4. Click **Create new project** and wait for provisioning to complete (typically 1-2 minutes).
 
-### Step 1.2: Run the SQL Migration
+### Step 1.2: Run the SQL Migrations
 1. In your Supabase dashboard, click on the **SQL Editor** icon in the left navigation sidebar (resembles `[SQL]` terminal icon).
 2. Click **New Query** to create a blank editor.
-3. Copy the entire contents of the migration file located in this repository at:
-   `supabase/migrations/001_create_leads.sql`
-4. Paste the SQL query into the Supabase editor window.
-5. Click the **Run** button at the top right.
-6. Verify the output states success. This creates the `public.leads` table, indexes, and automated triggers.
+3. Copy the entire contents of the initial migration file located in this repository at:
+   [001_create_leads.sql](file:///c:/Users/as360/Documents/anunay%20landing%20page/supabase/migrations/001_create_leads.sql)
+4. Paste the SQL query into the editor window and click **Run**.
+5. Click **New Query** again to create another blank editor.
+6. Copy the entire contents of the soft-delete/trash migration file located in this repository at:
+   [003_add_lead_trash.sql](file:///c:/Users/as360/Documents/anunay%20landing%20page/supabase/migrations/003_add_lead_trash.sql)
+7. Paste it into the editor window and click **Run**.
+8. Verify both queries run successfully. This sets up the table structure, indexes, soft-delete fields, and triggers.
 
 ### Step 1.3: Disable Public User Signup
 1. Navigate to **Authentication** (User icon in left sidebar) -> **Providers** -> **Email**.
