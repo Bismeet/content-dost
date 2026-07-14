@@ -398,13 +398,13 @@ export default function ProjectEnquiry() {
                     <button
                       type="button"
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className={`w-full px-4 py-3 bg-black/40 border rounded-lg text-xs font-mono text-white text-left flex items-center justify-between transition-colors ${
+                      className={`w-full px-4 py-3 bg-black/40 border rounded-lg text-xs md:text-sm font-sans text-white text-left flex items-center justify-between transition-colors ${
                         errors.needs ? 'border-[#ff3b30]' : 'border-white/5 hover:border-white/10'
                       }`}
                       aria-haspopup="listbox"
                       aria-expanded={isDropdownOpen}
                     >
-                      <span className="truncate pr-4">
+                      <span className="truncate pr-4 text-white/70">
                         {selectedNeeds.length === 0 
                           ? 'Select services...' 
                           : selectedNeeds.join(', ')}
@@ -417,7 +417,7 @@ export default function ProjectEnquiry() {
 
                     {/* Dropdown Menu Overlay */}
                     {isDropdownOpen && (
-                      <div className="absolute z-50 left-0 right-0 w-full mt-1 bg-[#121510] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                      <div className="absolute z-50 left-0 right-0 w-full mt-1 bg-[#0b0d0a] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                         <div className="p-1.5 space-y-0.5" role="listbox" aria-label="Services list">
                           {needsOptions.map((opt) => {
                             const isSelected = selectedNeeds.includes(opt.label);
@@ -427,10 +427,10 @@ export default function ProjectEnquiry() {
                                 onClick={() => toggleNeed(opt.label)}
                                 role="option"
                                 aria-selected={isSelected}
-                                className={`w-full px-3 py-2.5 rounded text-left text-[11px] font-mono transition-all flex items-center justify-between cursor-pointer ${
+                                className={`w-full px-4 py-3 rounded text-left text-xs md:text-sm font-sans transition-all flex items-center justify-between cursor-pointer ${
                                   isSelected 
-                                    ? 'bg-[var(--lime)]/10 text-white' 
-                                    : 'text-[var(--muted)] hover:bg-white/5 hover:text-white'
+                                    ? 'bg-[var(--lime)]/10 text-white font-medium' 
+                                    : 'text-white/70 hover:bg-white/5 hover:text-white'
                                 }`}
                               >
                                 <span>{opt.label}</span>
