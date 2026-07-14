@@ -216,14 +216,6 @@ export default function ProjectEnquiry() {
               </p>
             </div>
             
-            <div className="contact-meta-grid">
-              <div className="contact-meta-block">
-                <span className="contact-meta-label">Email Address</span>
-                <a href="mailto:hello@contentdost.agency" className="contact-meta-link">
-                  hello@contentdost.agency
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* 2. RIGHT COLUMN: Form Card (Order 2 on mobile, spans 2 rows on desktop) */}
