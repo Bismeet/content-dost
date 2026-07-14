@@ -7,10 +7,14 @@ import { leadUpdateSchema } from '../../../server/validation/admin-schemas.js';
 import { sendSuccess, sendError, sendGenericError } from '../../../server/helpers/api-response.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // 1. Resolve and validate UUID from pathname
+  // 1. Resolve and validate UUID (support query parameter for Vercel/Vite dev rewrites and pathname split fallback)
   const url = new URL(req.url || '', `http://${req.headers.host}`);
-  const pathParts = url.pathname.split('/');
-  const id = pathParts[pathParts.length - 1];
+  let id = url.searchParams.get('id');
+  
+  if (!id || id === '[id]') {
+    const pathParts = url.pathname.split('/');
+    id = pathParts[pathParts.length - 1];
+  }
 
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!id || !uuidRegex.test(id)) {

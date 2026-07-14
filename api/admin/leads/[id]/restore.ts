@@ -11,12 +11,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return sendError(res, 405, 'Method Not Allowed');
   }
 
-  // 2. Resolve and validate UUID from pathname
+  // 2. Resolve and validate UUID (support query parameter for Vercel/Vite dev rewrites and pathname split fallback)
   const url = new URL(req.url || '', `http://${req.headers.host}`);
-  const pathParts = url.pathname.split('/');
-  // Path format: /api/admin/leads/[id]/restore
-  // The id is second to last part
-  const id = pathParts[pathParts.length - 2];
+  let id = url.searchParams.get('id');
+  
+  if (!id || id === '[id]') {
+    const pathParts = url.pathname.split('/');
+    // Path format: /api/admin/leads/[id]/restore
+    // The id is second to last part
+    id = pathParts[pathParts.length - 2];
+  }
 
   // Let's use the standard format check
   const standardUuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
