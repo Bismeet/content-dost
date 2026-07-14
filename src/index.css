@@ -6870,6 +6870,8 @@ section[id] {
   height: 100%;
   pointer-events: none;
   z-index: 1;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 80px, #000 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 80px, #000 100%);
 }
 
 /* Flowing Ribbons using CSS Gradients + GAUSSIAN BLURS */

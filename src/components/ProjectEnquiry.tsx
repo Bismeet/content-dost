@@ -213,7 +213,7 @@ export default function ProjectEnquiry() {
   };
 
   return (
-    <section id="contact" className="py-24 bg-[var(--ink)] scroll-mt-20 relative overflow-hidden">
+    <section id="contact" className="py-24 bg-transparent scroll-mt-20 relative overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start max-w-7xl mx-auto relative z-10">
           
