@@ -7057,7 +7057,6 @@ section[id] {
   position: relative;
   z-index: 10;
   width: 100%;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
   padding-top: 1.5rem;
   display: flex;
   justify-content: center;
