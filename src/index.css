@@ -1435,7 +1435,7 @@ section[id] {
 /* FAQ accordion layout rules are defined in global rail classes */
 
 /* Cinematic enquiry form. */
-.post-hero-site #contact { margin: 0 !important; padding-block: clamp(6rem,12vw,11rem) !important; border-radius: 0 !important; background: radial-gradient(circle at 18% 48%, rgba(244,185,66,.1), transparent 26%), transparent !important; box-shadow: none !important; }
+.post-hero-site #contact { margin: 0 !important; padding-top: clamp(6rem, 12vw, 11rem) !important; padding-bottom: clamp(2rem, 4vw, 3.5rem) !important; border-radius: 0 !important; background: radial-gradient(circle at 18% 48%, rgba(244,185,66,.1), transparent 26%), transparent !important; box-shadow: none !important; }
 .post-hero-site #contact > .container > .grid { display: grid !important; grid-template-columns: minmax(320px,.9fr) minmax(0,1.1fr) !important; gap: clamp(3rem,7vw,7rem) !important; align-items: start !important; }
 .post-hero-site #contact h2 { font-size: clamp(3.8rem,5vw,5rem) !important; }
 .post-hero-site #contact .lg\:col-span-7 { padding: clamp(1.2rem,2.2vw,1.8rem) !important; background: linear-gradient(145deg, rgba(26,23,19,.84), rgba(8,8,8,.8)) !important; border: 1px solid var(--cine-border-medium) !important; border-radius: 18px !important; box-shadow: var(--cine-shadow-deep), inset 0 1px 0 rgba(255,255,255,.035) !important; backdrop-filter: blur(18px); }
@@ -6836,28 +6836,28 @@ section[id] {
   background-color: transparent;
   color: #f6f3eb;
   overflow: hidden;
-  padding: 7rem 2rem 2.5rem;
+  padding: 3.5rem 2rem 2rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   text-align: center;
   box-sizing: border-box;
-  min-height: 540px;
+  min-height: 380px;
   z-index: 10;
 }
 
 @media (max-width: 1024px) {
   .cinematic-footer {
-    min-height: 460px;
-    padding: 6rem 1.5rem 2rem;
+    min-height: 320px;
+    padding: 3rem 1.5rem 1.5rem;
   }
 }
 
 @media (max-width: 640px) {
   .cinematic-footer {
-    min-height: 380px;
-    padding: 5rem 1rem 1.5rem;
+    min-height: 280px;
+    padding: 2.5rem 1rem 1rem;
   }
 }
 
