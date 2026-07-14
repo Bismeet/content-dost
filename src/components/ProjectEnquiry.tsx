@@ -223,11 +223,6 @@ export default function ProjectEnquiry() {
                   hello@contentdost.agency
                 </a>
               </div>
-              <div className="contact-meta-block contact-meta-divider">
-                <span className="contact-meta-label">Onboarding Speed</span>
-                <span className="contact-meta-value">Typically within 48 hrs</span>
-                <span className="text-[var(--muted-dark)] text-[11px] block mt-0.5">of initial review</span>
-              </div>
             </div>
           </div>
 
