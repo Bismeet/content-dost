@@ -7026,7 +7026,7 @@ section[id] {
 /* Massive wordmark */
 .cinematic-footer__wordmark {
   position: absolute;
-  bottom: 0.5%;
+  bottom: -5.5%;
   left: 50%;
   transform: translate3d(-50%, 0, 0);
   font-family: var(--font-body), sans-serif;
@@ -7049,7 +7049,7 @@ section[id] {
 
 @media (max-width: 640px) {
   .cinematic-footer__wordmark {
-    bottom: 1.5%;
+    bottom: -3%;
     font-size: clamp(3.5rem, 18vw, 6.5rem);
   }
 }
