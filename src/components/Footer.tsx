@@ -17,7 +17,6 @@ export default function Footer() {
     bounds: null as DOMRect | null,
   });
 
-  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     const el = footerRef.current;
@@ -163,10 +162,6 @@ export default function Footer() {
         aria-hidden="true"
       >
         contentdost
-      </div>
-
-      <div className="cinematic-footer__metadata">
-        <span>© {currentYear} Content Dost</span>
       </div>
     </footer>
   );
