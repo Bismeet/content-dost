@@ -36,9 +36,7 @@ export default function Navbar() {
   const isVisibleRef = useRef(isVisible);
   isVisibleRef.current = isVisible;
 
-  const prefersReducedMotion = typeof window !== 'undefined'
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false;
+
 
   // 1. Observer for Hero Sentinel boundary (with hysteresis)
   useEffect(() => {
@@ -309,28 +307,6 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileMenuOpen]);
 
-  // 8. Desktop Pointer Tilt Effect
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if ('ontouchstart' in window || prefersReducedMotion) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-
-    const tiltX = -((y / (rect.height / 2)) * 0.4);
-    const tiltY = (x / (rect.width / 2)) * 0.4;
-    const shiftX = (x / (rect.width / 2)) * 2;
-
-    e.currentTarget.style.setProperty('--nav-tilt-x', `${tiltX}deg`);
-    e.currentTarget.style.setProperty('--nav-tilt-y', `${tiltY}deg`);
-    e.currentTarget.style.setProperty('--nav-shift-x', `${shiftX}px`);
-  };
-
-  const handleMouseLeave = (e: React.MouseEvent<HTMLElement>) => {
-    e.currentTarget.style.setProperty('--nav-tilt-x', '0deg');
-    e.currentTarget.style.setProperty('--nav-tilt-y', '0deg');
-    e.currentTarget.style.setProperty('--nav-shift-x', '0px');
-  };
-
   const closeMenu = () => setMobileMenuOpen(false);
 
   return (
@@ -338,8 +314,6 @@ export default function Navbar() {
       <header className="site-navbar-shell">
         <div 
           className={`site-navbar-reveal ${isScrolled ? 'site-navbar-reveal--scrolled' : ''} ${isVisible ? 'site-navbar-reveal--visible' : ''}`}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
         >
           <div className="navbar-glass-surface" />
           <div className="navbar-edge-sheen" />
