@@ -9,18 +9,17 @@ import { sendSuccess, sendError, sendGenericError } from '../server/helpers/api-
 import { handleCors } from '../server/security/cors.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // Handle CORS preflight and headers
-  if (handleCors(req, res)) {
-    return;
-  }
-
-  // 1. Accept only POST
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return sendError(res, 405, 'Method Not Allowed');
-  }
-
   try {
+    // Handle CORS preflight and headers
+    if (handleCors(req, res)) {
+      return;
+    }
+
+    // 1. Accept only POST
+    if (req.method !== 'POST') {
+      res.setHeader('Allow', 'POST');
+      return sendError(res, 405, 'Method Not Allowed');
+    }
     // 2. Validate request body size (max 50KB) and JSON format
     const body = await readAndValidateJson(req, 50 * 1024);
 
