@@ -365,7 +365,7 @@ export const faqData: FAQItem[] = [
 ];
 
 export const contactInfo = {
-  email: "hello@contentdost.agency",
+  email: "anunaykumar1925@gmail.com",
   address: "Creative Quarter, Suite 402, SF",
   socials: {
     twitter: "https://twitter.com/contentdost",

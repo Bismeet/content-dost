@@ -259,5 +259,5 @@ export const faqData: FAQItem[] = [
 export const siteMetadata = {
   title: "Content Dost — Strategy, Scripts, Video Editing, Brand Management & Websites",
   description: "Content Dost helps creators and growing brands with content strategy, scriptwriting, video editing, brand management and website making.",
-  contactEmail: "hello@contentdost.agency"
+  contactEmail: "anunaykumar1925@gmail.com"
 };

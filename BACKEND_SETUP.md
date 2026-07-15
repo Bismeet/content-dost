@@ -109,7 +109,7 @@ IP_HASH_SECRET=generate-a-long-random-hash-secret-here-to-secure-ip-hashes
 
 RESEND_API_KEY=re_yourapikey
 RESEND_FROM_EMAIL=Content Dost <onboarding@yourdomain.com>
-LEAD_NOTIFICATION_EMAIL=hello@contentdost.agency
+LEAD_NOTIFICATION_EMAIL=anunaykumar1925@gmail.com
 
 APP_ORIGIN=http://localhost:3000
 ADDITIONAL_ALLOWED_ORIGINS=http://localhost:5173

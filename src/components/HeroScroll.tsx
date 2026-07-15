@@ -168,6 +168,68 @@ export default function HeroScroll() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Intercept and clamp touch/swipe momentum in the Hero pinning zone on mobile/tablet devices
+  useEffect(() => {
+    if (window.innerWidth >= 1024) return;
+
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let startScrollY = 0;
+    let isIntercepting = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+      startScrollY = window.scrollY;
+
+      const pinDuration = window.innerHeight * 2.2;
+      if (startScrollY < pinDuration) {
+        isIntercepting = true;
+      } else {
+        isIntercepting = false;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isIntercepting || e.touches.length !== 1) return;
+
+      const currentY = e.touches[0].clientY;
+      const currentX = e.touches[0].clientX;
+      const deltaY = touchStartY - currentY;
+      const deltaX = touchStartX - currentX;
+
+      if (Math.abs(deltaY) < Math.abs(deltaX)) {
+        return;
+      }
+
+      const maxDelta = window.innerHeight * 0.65;
+
+      const clampedDelta = Math.max(-maxDelta, Math.min(maxDelta, deltaY));
+      const targetScrollY = startScrollY + clampedDelta;
+
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+
+      window.scrollTo(0, targetScrollY);
+    };
+
+    const handleTouchEnd = () => {
+      isIntercepting = false;
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
   // PixiJS renderer with retained Canvas 2D fallback.
   useEffect(() => {
     const container = heroViewportRef.current;
@@ -258,13 +320,7 @@ export default function HeroScroll() {
           start: 'top top',
           end: () => {
             const h = window.innerHeight;
-            if (window.innerWidth < 768) {
-              return `+=${h * 1.3}`; // mobile: 130vh
-            } else if (window.innerWidth < 1024) {
-              return `+=${h * 1.8}`; // tablet: 180vh
-            } else {
-              return `+=${h * 2.2}`; // desktop: 220vh
-            }
+            return `+=${h * 2.2}`; // 220vh scroll distance for stable speed
           },
           pin: true,
           pinSpacing: true,

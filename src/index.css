@@ -7585,6 +7585,20 @@ section[id] {
   }
 }
 
+/* Mobile Hero Centering overrides to resolve viewport-relative layout shift bugs */
+@media (max-width: 767px) {
+  .hero-paper-safe-area,
+  .hero-paper-overlay {
+    left: 5% !important;
+    right: 5% !important;
+    width: 90% !important;
+    top: 50% !important;
+    height: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+  }
+}
+
 
 
 

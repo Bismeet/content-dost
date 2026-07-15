@@ -77,7 +77,7 @@ export function getConfig(): Config {
     IP_HASH_SECRET: getEnv('IP_HASH_SECRET') || 'dev_secret_hash_ip_key_must_be_changed',
     RESEND_API_KEY: resendApiKey,
     RESEND_FROM_EMAIL: getEnv('RESEND_FROM_EMAIL') || 'Content Dost <onboarding@resend.dev>',
-    LEAD_NOTIFICATION_EMAIL: getEnv('LEAD_NOTIFICATION_EMAIL') || 'hello@contentdost.agency',
+    LEAD_NOTIFICATION_EMAIL: getEnv('LEAD_NOTIFICATION_EMAIL') || 'anunaykumar1925@gmail.com',
     APP_ORIGIN: appOrigin,
     ADDITIONAL_ALLOWED_ORIGINS: additionalOrigins,
     NODE_ENV: process.env.NODE_ENV || 'development',

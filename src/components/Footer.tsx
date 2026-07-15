@@ -160,11 +160,11 @@ export default function Footer() {
         <p className="cinematic-footer__contact">
           Reach out to us at{' '}
           <a 
-            href="mailto:hello@contentdost.agency" 
+            href="mailto:anunaykumar1925@gmail.com" 
             className="cinematic-footer__email"
-            aria-label="Send an email to hello@contentdost.agency"
+            aria-label="Send an email to anunaykumar1925@gmail.com"
           >
-            hello@contentdost.agency
+            anunaykumar1925@gmail.com
           </a>
         </p>
       </div>

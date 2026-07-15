@@ -5,11 +5,18 @@ import { validateOrigin } from '../../../server/security/origin.js';
 import { readAndValidateJson } from '../../../server/security/request-size.js';
 import { leadUpdateSchema } from '../../../server/validation/admin-schemas.js';
 import { sendSuccess, sendError, sendGenericError } from '../../../server/helpers/api-response.js';
+import { handleCors } from '../../../server/security/cors.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // 1. Resolve and validate UUID (support query parameter for Vercel/Vite dev rewrites and pathname split fallback)
-  const url = new URL(req.url || '', `http://${req.headers.host}`);
-  let id = url.searchParams.get('id');
+  try {
+    // Handle CORS preflight and headers
+    if (handleCors(req, res)) {
+      return;
+    }
+
+    // 1. Resolve and validate UUID (support query parameter for Vercel/Vite dev rewrites and pathname split fallback)
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    let id = url.searchParams.get('id');
   
   if (!id || id === '[id]') {
     const pathParts = url.pathname.split('/');
@@ -162,4 +169,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return sendGenericError(res, err);
     }
   }
+} catch (err) {
+  return sendGenericError(res, err);
+}
 }

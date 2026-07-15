@@ -6,8 +6,14 @@ import { getClientIp, hashIp } from '../server/security/ip.js';
 import { checkRateLimit } from '../server/security/rate-limiter.js';
 import { sendLeadNotificationEmail } from '../server/email/notification.js';
 import { sendSuccess, sendError, sendGenericError } from '../server/helpers/api-response.js';
+import { handleCors } from '../server/security/cors.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  // Handle CORS preflight and headers
+  if (handleCors(req, res)) {
+    return;
+  }
+
   // 1. Accept only POST
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');

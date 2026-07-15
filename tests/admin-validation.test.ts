@@ -103,7 +103,7 @@ describe('Admin Schemas and Security Helpers', () => {
     });
 
     it('does not touch ordinary text values', () => {
-      expect(escapeCsvFormula('hello@contentdost.agency')).toBe('hello@contentdost.agency');
+      expect(escapeCsvFormula('anunaykumar1925@gmail.com')).toBe('anunaykumar1925@gmail.com');
       expect(escapeCsvFormula('123 Main St')).toBe('123 Main St');
     });
 

@@ -3,15 +3,20 @@ import { verifyAdminSession } from '../../../server/auth/session.js';
 import { getSupabaseAdminClient } from '../../../server/database/supabase.js';
 import { leadsQuerySchema } from '../../../server/validation/admin-schemas.js';
 import { sendSuccess, sendError, sendGenericError } from '../../../server/helpers/api-response.js';
+import { handleCors } from '../../../server/security/cors.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // 1. Accept only GET
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    return sendError(res, 405, 'Method Not Allowed');
-  }
-
   try {
+    // Handle CORS preflight and headers
+    if (handleCors(req, res)) {
+      return;
+    }
+
+    // 1. Accept only GET
+    if (req.method !== 'GET') {
+      res.setHeader('Allow', 'GET');
+      return sendError(res, 405, 'Method Not Allowed');
+    }
     // 2. Verify Session
     const adminSession = await verifyAdminSession(req, res);
     if (!adminSession) {

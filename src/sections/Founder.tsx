@@ -112,7 +112,7 @@ export default function Founder() {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
                     </a>
                     <a
-                      href="mailto:hello@contentdost.agency"
+                      href="mailto:anunaykumar1925@gmail.com"
                       className="w-8 h-8 rounded bg-[#020202] hover:bg-[#FF4D00]/10 border border-zinc-900 hover:border-[#FF4D00]/30 flex items-center justify-center text-zinc-400 hover:text-[#FF4D00] transition-colors cursor-pointer"
                       title="Send email"
                     >

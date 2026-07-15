@@ -8,21 +8,26 @@ import { validateOrigin } from '../../server/security/origin.js';
 import { setSessionCookies } from '../../server/auth/session.js';
 import { sendSuccess, sendError, sendGenericError } from '../../server/helpers/api-response.js';
 import { getConfig } from '../../server/config.js';
+import { handleCors } from '../../server/security/cors.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // 1. Accept only POST
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return sendError(res, 405, 'Method Not Allowed');
-  }
-
-  // 2. Validate Origin header
-  const originHeader = req.headers.origin;
-  if (!validateOrigin(originHeader)) {
-    return sendError(res, 403, 'Forbidden origin');
-  }
-
   try {
+    // Handle CORS preflight and headers
+    if (handleCors(req, res)) {
+      return;
+    }
+
+    // 1. Accept only POST
+    if (req.method !== 'POST') {
+      res.setHeader('Allow', 'POST');
+      return sendError(res, 405, 'Method Not Allowed');
+    }
+
+    // 2. Validate Origin header
+    const originHeader = req.headers.origin;
+    if (!validateOrigin(originHeader)) {
+      return sendError(res, 403, 'Forbidden origin');
+    }
     // 3. Size validation (max 10KB for login)
     const body = await readAndValidateJson(req, 10 * 1024);
 

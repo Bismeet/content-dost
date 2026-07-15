@@ -3,13 +3,20 @@ import { verifyAdminSession } from '../../../../server/auth/session.js';
 import { getSupabaseAdminClient } from '../../../../server/database/supabase.js';
 import { validateOrigin } from '../../../../server/security/origin.js';
 import { sendSuccess, sendError, sendGenericError } from '../../../../server/helpers/api-response.js';
+import { handleCors } from '../../../../server/security/cors.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // 1. Accept only POST
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return sendError(res, 405, 'Method Not Allowed');
-  }
+  try {
+    // Handle CORS preflight and headers
+    if (handleCors(req, res)) {
+      return;
+    }
+
+    // 1. Accept only POST
+    if (req.method !== 'POST') {
+      res.setHeader('Allow', 'POST');
+      return sendError(res, 405, 'Method Not Allowed');
+    }
 
   // 2. Resolve and validate UUID (support query parameter for Vercel/Vite dev rewrites and pathname split fallback)
   const url = new URL(req.url || '', `http://${req.headers.host}`);
@@ -41,7 +48,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   res.setHeader('Cache-Control', 'no-store');
 
-  try {
     const supabaseAdmin = getSupabaseAdminClient();
 
     // 5. Fetch the lead to check existence and current soft-delete status
