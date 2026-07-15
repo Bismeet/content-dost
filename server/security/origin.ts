@@ -2,7 +2,11 @@ import { getConfig } from '../config.js';
 
 function normalizeUrl(url: string): string {
   try {
-    const parsed = new URL(url);
+    let target = url.trim();
+    if (!/^https?:\/\//i.test(target)) {
+      target = 'https://' + target;
+    }
+    const parsed = new URL(target);
     // Return protocol + host (without trailing slash)
     return `${parsed.protocol}//${parsed.host}`.toLowerCase();
   } catch {
@@ -33,6 +37,26 @@ export function validateOrigin(originHeader: string | undefined): boolean {
   // Allow additional explicitly configured origins
   for (const allowed of config.ADDITIONAL_ALLOWED_ORIGINS) {
     if (normalizedOrigin === normalizeUrl(allowed)) {
+      return true;
+    }
+  }
+
+  // Allow dynamic Vercel project deployment origins securely in production/preview
+  if (process.env.VERCEL_URL) {
+    const vercelOrigin = normalizeUrl('https://' + process.env.VERCEL_URL);
+    if (normalizedOrigin === vercelOrigin) {
+      return true;
+    }
+  }
+  if (process.env.VERCEL_BRANCH_URL) {
+    const vercelBranchOrigin = normalizeUrl('https://' + process.env.VERCEL_BRANCH_URL);
+    if (normalizedOrigin === vercelBranchOrigin) {
+      return true;
+    }
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    const vercelProdOrigin = normalizeUrl('https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL);
+    if (normalizedOrigin === vercelProdOrigin) {
       return true;
     }
   }
