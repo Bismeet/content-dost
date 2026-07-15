@@ -7,6 +7,7 @@ import { checkRateLimit } from '../../server/security/rate-limiter.js';
 import { validateOrigin } from '../../server/security/origin.js';
 import { setSessionCookies } from '../../server/auth/session.js';
 import { sendSuccess, sendError, sendGenericError } from '../../server/helpers/api-response.js';
+import { getConfig } from '../../server/config.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   // 1. Accept only POST
@@ -64,8 +65,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
     // 8. Strict admin user ID check
     const { user, session } = authData;
-    const config = await import('../../server/config.js');
-    const adminUserId = config.getConfig().ADMIN_USER_ID;
+    const adminUserId = getConfig().ADMIN_USER_ID;
 
     if (user.id !== adminUserId) {
       // Sign out immediately to clear any session on Supabase side
