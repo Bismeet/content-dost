@@ -23,7 +23,9 @@ const DESKTOP_HERO_SCROLL_MULTIPLIER = 2.2;
 const MOBILE_HERO_SCROLL_MULTIPLIER = 3.4;
 const MOBILE_LANDSCAPE_HERO_SCROLL_MULTIPLIER = 2.8;
 const MOBILE_MAX_FRAME_STEP = 1;
-const MOBILE_FORWARD_EXIT_GATE_PROGRESS = 0.68;
+// The frame tween occupies the first 9.2 of the 10 timeline units. Gate only
+// at that boundary so ordinary scrolling keeps its natural speed.
+const MOBILE_FORWARD_EXIT_GATE_PROGRESS = 0.92;
 const getMobileDecodeSize = () => window.innerWidth < 600
   ? { width: 540, height: 960 } as const
   : { width: 720, height: 1280 } as const;

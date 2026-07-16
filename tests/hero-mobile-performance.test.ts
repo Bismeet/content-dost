@@ -47,7 +47,7 @@ describe('mobile hero performance safeguards', () => {
 
   it('absorbs forward input while the final mobile frames catch up', () => {
     expect(heroSource).not.toContain('self.scroll(self.end - 1)');
-    expect(heroSource).toContain('MOBILE_FORWARD_EXIT_GATE_PROGRESS');
+    expect(heroSource).toContain('MOBILE_FORWARD_EXIT_GATE_PROGRESS = 0.92');
     expect(heroSource).toContain("window.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true })");
     expect(heroSource).toContain("window.addEventListener('wheel', handleWheel, { passive: false, capture: true })");
     expect(heroSource).toContain('releaseMobileForwardGate');
