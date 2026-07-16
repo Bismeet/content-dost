@@ -22,6 +22,10 @@ const MOBILE_FRAME_URLS = Array.from(
 const DESKTOP_HERO_SCROLL_MULTIPLIER = 2.2;
 const MOBILE_HERO_SCROLL_MULTIPLIER = 3.4;
 const MOBILE_LANDSCAPE_HERO_SCROLL_MULTIPLIER = 2.8;
+const MOBILE_MAX_FRAME_STEP = 1;
+const getMobileDecodeSize = () => window.innerWidth < 600
+  ? { width: 540, height: 960 } as const
+  : { width: 720, height: 1280 } as const;
 const MOBILE_HERO_MEDIA_QUERY =
   '(max-width: 767px), (max-width: 1024px) and (max-height: 500px) and (orientation: landscape)';
 const DESKTOP_HERO_MEDIA_QUERY =
@@ -123,6 +127,7 @@ export default function HeroScroll() {
   const heroViewportRef = useRef<HTMLDivElement>(null);
   const fallbackCanvasRef = useRef<HTMLCanvasElement>(null);
   const sequenceRendererRef = useRef<HeroSequenceRenderer | null>(null);
+  const mobileFrameProgressHandlerRef = useRef<((progress: number) => void) | null>(null);
 
 
   // States
@@ -248,7 +253,9 @@ export default function HeroScroll() {
     setIsFirstFrameLoaded(false);
     setLoadingProgress(0);
     const debugEnabled = import.meta.env.DEV && new URLSearchParams(window.location.search).has('debug');
-    const forceCanvas = (debugEnabled && new URLSearchParams(window.location.search).get('renderer') === 'canvas') || useMobileFrames;
+    // Let capable phones use WebGL. Canvas 2D remains the automatic fallback,
+    // but forcing it on every phone makes each frame draw block the main thread.
+    const forceCanvas = debugEnabled && new URLSearchParams(window.location.search).get('renderer') === 'canvas';
     const preferHtmlImages = debugEnabled && new URLSearchParams(window.location.search).get('source') === 'html';
     const simulateContextLoss = debugEnabled && new URLSearchParams(window.location.search).has('context-loss');
     
@@ -265,11 +272,17 @@ export default function HeroScroll() {
         updatePaperLayout();
         if (!isContactEditing()) ScrollTrigger.refresh();
       },
+      onFrameRendered: (frameIndex) => {
+        if (!useMobileFrames || disposed) return;
+        mobileFrameProgressHandlerRef.current?.(frameIndex / Math.max(1, totalFrames - 1));
+      },
       onLoadingProgress: (progress) => {
         if (!disposed) setLoadingProgress(progress);
       },
       debugTarget: debugEnabled ? container : undefined,
       forceCanvas,
+      decodeSize: useMobileFrames ? getMobileDecodeSize() : undefined,
+      maxFrameStep: useMobileFrames ? MOBILE_MAX_FRAME_STEP : undefined,
       preferHtmlImages,
       simulateContextLoss,
     });
@@ -323,6 +336,7 @@ export default function HeroScroll() {
       },
       (mediaContext) => {
         const isMobile = Boolean(mediaContext.conditions?.isMobile);
+        let mobileProgressHandler: ((progress: number) => void) | null = null;
 
         const animationContext = gsap.context(() => {
           // Reset the existing Hero stages whenever the responsive mode changes.
@@ -353,20 +367,29 @@ export default function HeroScroll() {
               },
               pin: true,
               pinSpacing: true,
-              scrub: useMobileFrames ? 1.2 : 0.75,
+              // The renderer governs mobile frame speed itself. Keeping GSAP's
+              // mobile scrub direct avoids stacking a second catch-up delay.
+              scrub: useMobileFrames ? true : 0.75,
               anticipatePin: 1,
               invalidateOnRefresh: true,
               onUpdate: (self) => {
-                // Track scroll progress internally & update positioning
+                if (useMobileFrames) return;
+                // Desktop remains directly synchronized to scroll progress.
                 scrollValRef.current = self.progress;
                 updatePaperLayout(self.progress);
               },
               onLeave: () => {
+                if (useMobileFrames) return;
                 scrollValRef.current = 1;
                 updatePaperLayout(1);
               }
             },
           });
+
+          // Desktop keeps the original combined timeline. On mobile, text is
+          // paused and advanced only after the corresponding image frame has
+          // actually rendered, preventing copy from racing ahead on fast swipes.
+          const stageTimeline = useMobileFrames ? gsap.timeline({ paused: true }) : tl;
 
           // 1. Frame sequence animation (entire timeline duration: 10)
           tl.to(frameState, {
@@ -386,123 +409,134 @@ export default function HeroScroll() {
           }, 0);
 
           // 2. Opening copy fade out (Beat 01)
-          tl.to('.js-hero-opening', {
+          stageTimeline.to('.js-hero-opening', {
             opacity: 0,
             y: -24,
             duration: 1.2
           }, 0.8);
 
           // 3. Paper overlay container fade in
-          tl.to('.js-paper-overlay', {
+          stageTimeline.to('.js-paper-overlay', {
             opacity: 1,
             duration: 0.5
           }, 1.8);
 
           // 4. Message 0 (STRATEGY) (Beat 02 & 03)
-          tl.set('.js-message-0', { visibility: 'visible' }, 1.8);
-          tl.to('.js-message-0', { opacity: 1, y: 0, duration: 0.1 }, 1.8);
-          tl.fromTo('.js-message-0 .hero-paper-eyebrow',
+          stageTimeline.set('.js-message-0', { visibility: 'visible' }, 1.8);
+          stageTimeline.to('.js-message-0', { opacity: 1, y: 0, duration: 0.1 }, 1.8);
+          stageTimeline.fromTo('.js-message-0 .hero-paper-eyebrow',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             1.8
           );
-          tl.fromTo('.js-message-0 .hero-paper-title',
+          stageTimeline.fromTo('.js-message-0 .hero-paper-title',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             2.1
           );
-          tl.fromTo('.js-message-0 .hero-paper-description',
+          stageTimeline.fromTo('.js-message-0 .hero-paper-description',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             2.4
           );
           // Fade out Message 0
-          tl.to('.js-message-0', {
+          stageTimeline.to('.js-message-0', {
             opacity: 0,
             y: -15,
             duration: 0.5
           }, 3.6);
-          tl.set('.js-message-0', { visibility: 'hidden' }, 4.1);
+          stageTimeline.set('.js-message-0', { visibility: 'hidden' }, 4.1);
 
           // 5. Message 1 (SCRIPTWRITING) (Beat 04 & 05)
-          tl.set('.js-message-1', { visibility: 'visible' }, 4.1);
-          tl.to('.js-message-1', { opacity: 1, y: 0, duration: 0.1 }, 4.1);
-          tl.fromTo('.js-message-1 .hero-paper-eyebrow',
+          stageTimeline.set('.js-message-1', { visibility: 'visible' }, 4.1);
+          stageTimeline.to('.js-message-1', { opacity: 1, y: 0, duration: 0.1 }, 4.1);
+          stageTimeline.fromTo('.js-message-1 .hero-paper-eyebrow',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             4.1
           );
-          tl.fromTo('.js-message-1 .hero-paper-title',
+          stageTimeline.fromTo('.js-message-1 .hero-paper-title',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             4.4
           );
-          tl.fromTo('.js-message-1 .hero-paper-description',
+          stageTimeline.fromTo('.js-message-1 .hero-paper-description',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             4.7
           );
           // Fade out Message 1
-          tl.to('.js-message-1', {
+          stageTimeline.to('.js-message-1', {
             opacity: 0,
             y: -15,
             duration: 0.5
           }, 5.9);
-          tl.set('.js-message-1', { visibility: 'hidden' }, 6.4);
+          stageTimeline.set('.js-message-1', { visibility: 'hidden' }, 6.4);
 
           // 6. Message 2 (EDITING) (Beat 07 & 08)
-          tl.set('.js-message-2', { visibility: 'visible' }, 6.4);
-          tl.to('.js-message-2', { opacity: 1, y: 0, duration: 0.1 }, 6.4);
-          tl.fromTo('.js-message-2 .hero-paper-eyebrow',
+          stageTimeline.set('.js-message-2', { visibility: 'visible' }, 6.4);
+          stageTimeline.to('.js-message-2', { opacity: 1, y: 0, duration: 0.1 }, 6.4);
+          stageTimeline.fromTo('.js-message-2 .hero-paper-eyebrow',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             6.4
           );
-          tl.fromTo('.js-message-2 .hero-paper-title',
+          stageTimeline.fromTo('.js-message-2 .hero-paper-title',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             6.7
           );
-          tl.fromTo('.js-message-2 .hero-paper-description',
+          stageTimeline.fromTo('.js-message-2 .hero-paper-description',
             { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.5 },
             7.0
           );
           // Fade out Message 2 and container
-          tl.to('.js-message-2', {
+          stageTimeline.to('.js-message-2', {
             opacity: 0,
             y: -15,
             duration: 0.5
           }, 8.0);
-          tl.set('.js-message-2', { visibility: 'hidden' }, 8.5);
-          tl.to('.js-paper-overlay', {
+          stageTimeline.set('.js-message-2', { visibility: 'hidden' }, 8.5);
+          stageTimeline.to('.js-paper-overlay', {
             opacity: 0,
             duration: 0.5
           }, 8.0);
 
           // 7. Final Reveal (Beat 09 & 10)
-          tl.fromTo('.hero-final-veil',
+          stageTimeline.fromTo('.hero-final-veil',
             { opacity: 0 },
             { opacity: 1, duration: 0.8 },
             8.2
           );
-          tl.fromTo('.hero-final-reveal',
+          stageTimeline.fromTo('.hero-final-reveal',
             { opacity: 0, y: 24, xPercent: -50, yPercent: -50 },
             { opacity: 1, y: 0, xPercent: -50, yPercent: -50, duration: 0.8 },
             8.2
           );
-          tl.fromTo('.hero-final-actions',
+          stageTimeline.fromTo('.hero-final-actions',
             { opacity: 0, y: 12 },
             { opacity: 1, y: 0, duration: 0.6 },
             8.7
           );
 
           // 8. Completed timeline end without hiding navbar
+          if (useMobileFrames) {
+            mobileProgressHandler = (progress: number) => {
+              stageTimeline.progress(progress, false);
+              scrollValRef.current = progress;
+              updatePaperLayout(progress);
+            };
+            mobileFrameProgressHandlerRef.current = mobileProgressHandler;
+          }
         }, section);
 
         updatePaperLayout(0);
 
         return () => {
+          if (mobileFrameProgressHandlerRef.current === mobileProgressHandler) {
+            mobileFrameProgressHandlerRef.current = null;
+          }
           animationContext.revert();
         };
       },

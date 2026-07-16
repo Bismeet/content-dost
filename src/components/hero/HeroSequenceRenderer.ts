@@ -1,4 +1,5 @@
 import { Application, Sprite, Texture } from 'pixi.js';
+import { getCappedFrameTarget } from './frameStep';
 
 type DecodedFrame = ImageBitmap | HTMLImageElement;
 type Direction = 'forward' | 'backward';
@@ -15,9 +16,12 @@ interface HeroSequenceRendererOptions {
   fallbackCanvas: HTMLCanvasElement;
   frameUrls: string[];
   onFirstFrame: () => void;
+  onFrameRendered?: (frameIndex: number) => void;
   onLoadingProgress?: (progress: number) => void;
   debugTarget?: HTMLElement;
   forceCanvas?: boolean;
+  decodeSize?: Readonly<{ width: number; height: number }>;
+  maxFrameStep?: number;
   preferHtmlImages?: boolean;
   simulateContextLoss?: boolean;
 }
@@ -55,14 +59,28 @@ function loadHtmlImage(url: string, signal?: AbortSignal) {
   });
 }
 
-async function decodeFrame(url: string, signal?: AbortSignal, preferHtmlImages = false): Promise<DecodedFrame> {
+async function decodeFrame(
+  url: string,
+  signal?: AbortSignal,
+  preferHtmlImages = false,
+  decodeSize?: Readonly<{ width: number; height: number }>,
+): Promise<DecodedFrame> {
   if (preferHtmlImages) return loadHtmlImage(url, signal);
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`Unable to load frame: ${url}`);
   const blob = await response.blob();
   if ('createImageBitmap' in window) {
     try {
-      return await createImageBitmap(blob);
+      // Mobile canvases render at CSS-pixel resolution, so retaining a decoded
+      // 1080x1920 bitmap wastes memory and increases every GPU upload. Resize in
+      // the browser's decoder before the frame enters either render path.
+      return decodeSize
+        ? await createImageBitmap(blob, {
+            resizeWidth: decodeSize.width,
+            resizeHeight: decodeSize.height,
+            resizeQuality: 'high',
+          })
+        : await createImageBitmap(blob);
     } catch {
       // Some Safari/WebView combinations expose createImageBitmap but reject JPEG blobs.
     }
@@ -148,6 +166,7 @@ export class HeroSequenceRenderer {
   private readonly activeAbortControllers = new Map<number, AbortController>();
   private resizeObserver: ResizeObserver | null = null;
   private scheduledRender: number | null = null;
+  private renderInFlight = false;
   private requestedFrame = FIRST_FRAME;
   private renderedFrame = -1;
   private direction: Direction = 'forward';
@@ -159,10 +178,10 @@ export class HeroSequenceRenderer {
   private textureSwitchTotalMs = 0;
   private textureSwitchCount = 0;
   private readonly isMobile = window.innerWidth < 1025;
-  private readonly concurrentLoads = this.isMobile ? 3 : 6;
+  private readonly concurrentLoads = this.isMobile ? 4 : 6;
   private readonly decodedLimit = this.isMobile ? 32 : 48;
-  private readonly behindCount = this.isMobile ? 3 : 8;
-  private readonly aheadCount = this.isMobile ? 6 : 16;
+  private readonly behindCount = 8;
+  private readonly aheadCount = 16;
 
   constructor(options: HeroSequenceRendererOptions) {
     this.options = options;
@@ -202,7 +221,7 @@ export class HeroSequenceRenderer {
         : this.direction;
     this.requestedFrame = clamped;
 
-    if (this.scheduledRender !== null) return;
+    if (this.scheduledRender !== null || this.renderInFlight) return;
     this.scheduledRender = requestAnimationFrame(() => {
       this.scheduledRender = null;
       void this.renderRequestedFrame();
@@ -215,6 +234,7 @@ export class HeroSequenceRenderer {
       requestedFrame: this.requestedFrame,
       renderedFrame: this.renderedFrame,
       direction: this.direction,
+      maxFrameStep: this.options.maxFrameStep ?? null,
       decodedCacheSize: this.decodedCache.size,
       gpuTextureCacheSize: this.textureCache.size,
       loadingQueueSize: this.queue.length,
@@ -332,18 +352,27 @@ export class HeroSequenceRenderer {
   }
 
   private async renderRequestedFrame() {
-    const target = this.requestedFrame;
-    if (target === this.renderedFrame) {
-      this.updateDirectionalCache(target);
-      return;
-    }
+    if (this.renderInFlight) return;
+    this.renderInFlight = true;
+    const target = getCappedFrameTarget(
+      this.renderedFrame,
+      this.requestedFrame,
+      this.options.maxFrameStep,
+    );
 
     try {
-      const source = await this.getDecoded(target, -1000);
-      if (this.destroyed || target !== this.requestedFrame) {
-        if (!this.destroyed) this.requestFrame(this.requestedFrame);
+      if (target === this.renderedFrame) {
+        this.updateDirectionalCache(target);
         return;
       }
+
+      const source = await this.getDecoded(target, -1000);
+      const latestTarget = getCappedFrameTarget(
+        this.renderedFrame,
+        this.requestedFrame,
+        this.options.maxFrameStep,
+      );
+      if (this.destroyed || target !== latestTarget) return;
 
       const switchStartedAt = performance.now();
       if (this.usingCanvas || !this.app || !this.sprite) {
@@ -358,12 +387,18 @@ export class HeroSequenceRenderer {
         this.fallback.hide();
       }
       this.renderedFrame = target;
+      this.options.onFrameRendered?.(target);
       this.textureSwitchTotalMs += performance.now() - switchStartedAt;
       this.textureSwitchCount += 1;
       this.updateDirectionalCache(target);
       this.publishDiagnostics();
     } catch {
       // Keep the last valid frame visible and let the next scroll request retry.
+    } finally {
+      this.renderInFlight = false;
+      if (!this.destroyed && this.requestedFrame !== this.renderedFrame) {
+        this.requestFrame(this.requestedFrame);
+      }
     }
   }
 
@@ -423,7 +458,12 @@ export class HeroSequenceRenderer {
       this.activeAbortControllers.set(task.index, controller);
       const url = this.options.frameUrls[task.index];
 
-      void decodeFrame(url, controller.signal, this.options.preferHtmlImages)
+      void decodeFrame(
+        url,
+        controller.signal,
+        this.options.preferHtmlImages,
+        this.options.decodeSize,
+      )
         .then((source) => {
           if (this.destroyed) {
             if (isImageBitmap(source)) source.close();
@@ -449,10 +489,11 @@ export class HeroSequenceRenderer {
   }
 
   private primeInitialFrames() {
-    for (let index = 1; index <= Math.min(11, this.options.frameUrls.length - 1); index += 1) {
+    const initialAhead = this.options.decodeSize ? 24 : 11;
+    for (let index = 1; index <= Math.min(initialAhead, this.options.frameUrls.length - 1); index += 1) {
       void this.getDecoded(index, index).catch(() => undefined);
     }
-    void this.getDecoded(this.options.frameUrls.length - 1, 12).catch(() => undefined);
+    void this.getDecoded(this.options.frameUrls.length - 1, initialAhead + 1).catch(() => undefined);
   }
 
   private updateDirectionalCache(currentFrame: number) {
