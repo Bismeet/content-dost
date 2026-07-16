@@ -137,6 +137,7 @@ export class HeroSequenceRenderer {
   private readonly loading = new Map<number, Promise<DecodedFrame>>();
   private readonly queue: QueuedFrame[] = [];
   private readonly abortController = new AbortController();
+  private readonly activeAbortControllers = new Map<number, AbortController>();
   private resizeObserver: ResizeObserver | null = null;
   private scheduledRender: number | null = null;
   private requestedFrame = FIRST_FRAME;
@@ -149,11 +150,11 @@ export class HeroSequenceRenderer {
   private initialLoadedCount = 0;
   private textureSwitchTotalMs = 0;
   private textureSwitchCount = 0;
-  private readonly isMobile = window.innerWidth < 768;
-  private readonly concurrentLoads = this.isMobile ? 4 : 6;
-  private readonly decodedLimit = this.isMobile ? 24 : 48;
-  private readonly behindCount = this.isMobile ? 4 : 8;
-  private readonly aheadCount = this.isMobile ? 8 : 16;
+  private readonly isMobile = window.innerWidth < 1025;
+  private readonly concurrentLoads = this.isMobile ? 3 : 6;
+  private readonly decodedLimit = this.isMobile ? 32 : 48;
+  private readonly behindCount = this.isMobile ? 3 : 8;
+  private readonly aheadCount = this.isMobile ? 6 : 16;
 
   constructor(options: HeroSequenceRendererOptions) {
     this.options = options;
@@ -235,6 +236,10 @@ export class HeroSequenceRenderer {
     if (this.destroyed) return;
     this.destroyed = true;
     this.abortController.abort();
+    for (const controller of this.activeAbortControllers.values()) {
+      controller.abort();
+    }
+    this.activeAbortControllers.clear();
     if (this.scheduledRender !== null) cancelAnimationFrame(this.scheduledRender);
     this.scheduledRender = null;
     this.queue.splice(0).forEach((task) => task.reject(new DOMException('Renderer destroyed', 'AbortError')));
@@ -398,9 +403,18 @@ export class HeroSequenceRenderer {
     while (!this.destroyed && this.activeLoads < this.concurrentLoads && this.queue.length > 0) {
       const task = this.queue.shift();
       if (!task) return;
+
+      if (this.destroyed) {
+        task.reject(new DOMException('Renderer destroyed', 'AbortError'));
+        continue;
+      }
+
       this.activeLoads += 1;
+      const controller = new AbortController();
+      this.activeAbortControllers.set(task.index, controller);
       const url = this.options.frameUrls[task.index];
-      void decodeFrame(url, this.abortController.signal, this.options.preferHtmlImages)
+
+      void decodeFrame(url, controller.signal, this.options.preferHtmlImages)
         .then((source) => {
           if (this.destroyed) {
             if (isImageBitmap(source)) source.close();
@@ -413,8 +427,11 @@ export class HeroSequenceRenderer {
           this.publishDiagnostics();
           task.resolve(source);
         })
-        .catch(task.reject)
+        .catch((err) => {
+          task.reject(err);
+        })
         .finally(() => {
+          this.activeAbortControllers.delete(task.index);
           this.loading.delete(task.index);
           this.activeLoads -= 1;
           this.pumpQueue();
@@ -454,6 +471,8 @@ export class HeroSequenceRenderer {
 
   private pruneQueuedFrames(minimum: number, maximum: number, currentFrame: number) {
     const finalFrame = this.options.frameUrls.length - 1;
+    
+    // 1. Prune pending tasks in the queue
     for (let index = this.queue.length - 1; index >= 0; index -= 1) {
       const task = this.queue[index];
       if (
@@ -465,6 +484,17 @@ export class HeroSequenceRenderer {
       this.queue.splice(index, 1);
       this.loading.delete(task.index);
       task.reject(new DOMException('Frame left the active preload window', 'AbortError'));
+    }
+
+    // 2. Abort active downloads that are no longer in the active window
+    for (const [index, controller] of this.activeAbortControllers) {
+      if (
+        index === currentFrame
+        || index === FIRST_FRAME
+        || index === finalFrame
+        || (index >= minimum && index <= maximum)
+      ) continue;
+      controller.abort();
     }
   }
 

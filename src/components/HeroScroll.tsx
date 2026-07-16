@@ -353,7 +353,7 @@ export default function HeroScroll() {
               },
               pin: true,
               pinSpacing: true,
-              scrub: isMobile ? 0.7 : 0.75,
+              scrub: useMobileFrames ? 1.2 : 0.75,
               anticipatePin: 1,
               invalidateOnRefresh: true,
               onUpdate: (self) => {
