@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import frameManifest from '../content/frameManifest.json';
 import { HeroSequenceRenderer } from './hero/HeroSequenceRenderer';
 import { getLenisInstance } from '../lib/smoothScroll';
+import { getViewportOrientation, isContactEditing } from '../lib/contactFocus';
 
 // Register GSAP ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger);
@@ -19,11 +20,33 @@ const MOBILE_HERO_MEDIA_QUERY =
 const DESKTOP_HERO_MEDIA_QUERY =
   '(min-width: 768px) and (min-height: 501px), (min-width: 1025px)';
 
-const getMobileViewportHeight = () =>
-  window.visualViewport?.height ?? window.innerHeight;
+let stableMobileViewport = {
+  width: 0,
+  height: 0,
+  orientation: '',
+};
+
+const getStableMobileViewportHeight = () => {
+  const width = window.innerWidth;
+  const orientation = getViewportOrientation();
+  if (
+    stableMobileViewport.height === 0 ||
+    Math.abs(stableMobileViewport.width - width) > 2 ||
+    stableMobileViewport.orientation !== orientation
+  ) {
+    stableMobileViewport = {
+      width,
+      // `100svh` is the Hero's CSS contract. Capture its stable layout height
+      // instead of the keyboard-sensitive visual viewport height.
+      height: document.documentElement.clientHeight,
+      orientation,
+    };
+  }
+  return stableMobileViewport.height;
+};
 
 const getMobileHeroScrollMultiplier = () =>
-  window.innerWidth > window.innerHeight
+  getViewportOrientation() === 'landscape'
     ? MOBILE_LANDSCAPE_HERO_SCROLL_MULTIPLIER
     : MOBILE_HERO_SCROLL_MULTIPLIER;
 
@@ -174,7 +197,20 @@ export default function HeroScroll() {
 
   useEffect(() => {
     updateCachedDimensions();
+    let previousWidth = window.innerWidth;
+    let previousOrientation = getViewportOrientation();
     const handleResize = () => {
+      const nextWidth = window.innerWidth;
+      const nextOrientation = getViewportOrientation();
+      if (
+        isContactEditing() &&
+        Math.abs(nextWidth - previousWidth) <= 2 &&
+        nextOrientation === previousOrientation
+      ) {
+        return;
+      }
+      previousWidth = nextWidth;
+      previousOrientation = nextOrientation;
       updateCachedDimensions();
       updatePaperLayout();
     };
@@ -203,7 +239,7 @@ export default function HeroScroll() {
         if (disposed) return;
         setIsFirstFrameLoaded(true);
         updatePaperLayout();
-        ScrollTrigger.refresh();
+        if (!isContactEditing()) ScrollTrigger.refresh();
       },
       onLoadingProgress: (progress) => {
         if (!disposed) setLoadingProgress(progress);
@@ -289,7 +325,7 @@ export default function HeroScroll() {
                   return `+=${window.innerHeight * DESKTOP_HERO_SCROLL_MULTIPLIER}`;
                 }
 
-                return `+=${getMobileViewportHeight() * getMobileHeroScrollMultiplier()}`;
+                return `+=${getStableMobileViewportHeight() * getMobileHeroScrollMultiplier()}`;
               },
               pin: true,
               pinSpacing: true,
@@ -447,28 +483,11 @@ export default function HeroScroll() {
     );
 
     // Initial layout sync once trigger binds
-    ScrollTrigger.refresh();
-
-    let viewportRefreshTimer: number | null = null;
-    const refreshAfterMobileViewportChange = () => {
-      if (!window.matchMedia(MOBILE_HERO_MEDIA_QUERY).matches) return;
-
-      if (viewportRefreshTimer !== null) {
-        window.clearTimeout(viewportRefreshTimer);
-      }
-
-      viewportRefreshTimer = window.setTimeout(() => {
-        viewportRefreshTimer = null;
-        ScrollTrigger.refresh();
-      }, 180);
-    };
-
-    window.visualViewport?.addEventListener('resize', refreshAfterMobileViewportChange);
-    window.addEventListener('orientationchange', refreshAfterMobileViewportChange);
+    if (!isContactEditing()) ScrollTrigger.refresh();
 
     // Initial hash navigation scroll bypass
     const hash = window.location.hash;
-    if (hash && hash !== '#') {
+    if (hash && hash !== '#' && !isContactEditing()) {
       const target = document.querySelector(hash);
       if (target) {
         ScrollTrigger.refresh();
@@ -486,11 +505,6 @@ export default function HeroScroll() {
     }
 
     return () => {
-      if (viewportRefreshTimer !== null) {
-        window.clearTimeout(viewportRefreshTimer);
-      }
-      window.visualViewport?.removeEventListener('resize', refreshAfterMobileViewportChange);
-      window.removeEventListener('orientationchange', refreshAfterMobileViewportChange);
       media.revert();
     };
   }, [isFirstFrameLoaded, prefersReducedMotion]);

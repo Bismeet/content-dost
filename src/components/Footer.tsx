@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import SoftAurora from './reactbits/SoftAurora/SoftAurora';
+import {
+  CONTACT_EDITING_CHANGE_EVENT,
+  isContactEditing,
+} from '../lib/contactFocus';
 
 export default function Footer() {
   const footerRef = useRef<HTMLElement>(null);
   const wordmarkRef = useRef<HTMLDivElement>(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
+  const [contactEditing, setContactEditingState] = useState(isContactEditing);
   
   // Parallax target/current states for pointer and scroll
   const stateRef = useRef({
@@ -18,6 +23,15 @@ export default function Footer() {
     rafId: null as number | null,
     bounds: null as DOMRect | null,
   });
+
+  useEffect(() => {
+    const handleContactEditingChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ active: boolean }>;
+      setContactEditingState(customEvent.detail.active);
+    };
+    document.addEventListener(CONTACT_EDITING_CHANGE_EVENT, handleContactEditingChange);
+    return () => document.removeEventListener(CONTACT_EDITING_CHANGE_EVENT, handleContactEditingChange);
+  }, []);
 
   useEffect(() => {
     const el = footerRef.current;
@@ -108,6 +122,7 @@ export default function Footer() {
     };
 
     const handleResize = () => {
+      if (isContactEditing()) return;
       cacheBounds();
     };
 
@@ -140,7 +155,7 @@ export default function Footer() {
     <footer ref={footerRef} className="cinematic-footer">
       <div className="cinematic-footer__soft-aurora" aria-hidden="true">
         <SoftAurora
-          paused={!isIntersecting}
+          paused={!isIntersecting || contactEditing}
           speed={2.0}
           scale={1.2}
           brightness={1.15}

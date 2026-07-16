@@ -76,6 +76,77 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const socialLinks = [
+  { name: 'Instagram', href: 'https://instagram.com/contentdost', icon: InstagramIcon, className: 'instagram', glow: 'rgba(225, 48, 108, 0.4)' },
+  { name: 'LinkedIn', href: 'https://linkedin.com/company/contentdost', icon: LinkedInIcon, className: 'linkedin', glow: 'rgba(0, 119, 181, 0.4)' },
+  { name: 'YouTube', href: 'https://youtube.com/contentdost', icon: YouTubeIcon, className: 'youtube', glow: 'rgba(255, 0, 0, 0.4)' },
+  { name: 'Twitter X', href: 'https://twitter.com/contentdost', icon: XIcon, className: 'twitter', glow: 'rgba(255, 255, 255, 0.25)' },
+] as const;
+
+const ContactIntro = React.memo(function ContactIntro() {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
+  const handleDockMouseMove = (event: React.MouseEvent<HTMLAnchorElement>, index: number) => {
+    if ('ontouchstart' in window) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left - rect.width / 2;
+    const y = event.clientY - rect.top - rect.height / 2;
+    const maxTilt = 4;
+    event.currentTarget.style.setProperty('--tilt-x', `${-((y / (rect.height / 2)) * maxTilt)}deg`);
+    event.currentTarget.style.setProperty('--tilt-y', `${(x / (rect.width / 2)) * maxTilt}deg`);
+    setHoveredIdx(index);
+  };
+
+  const handleDockMouseLeave = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.currentTarget.style.setProperty('--tilt-x', '0deg');
+    event.currentTarget.style.setProperty('--tilt-y', '0deg');
+    setHoveredIdx(null);
+  };
+
+  return (
+    <div className="lg:col-span-5 contact-intro-block">
+      <div>
+        <h2>
+          Have an idea <br />
+          worth <br />
+          shaping?
+        </h2>
+
+        <div className="relative inline-block w-full max-w-[420px] pt-8 social-dock-wrapper mx-auto lg:mx-0">
+          <div className="dock-moon-backdrop" />
+          <div className="social-dock-capsule relative z-10" onMouseLeave={() => setHoveredIdx(null)}>
+            {socialLinks.map((item, index) => {
+              const distance = hoveredIdx !== null ? Math.abs(hoveredIdx - index) : null;
+              const scale = distance === 0 ? 1.35 : distance === 1 ? 1.15 : 1;
+              const translateY = distance === 0 ? '-16px' : distance === 1 ? '-6px' : '0px';
+              const Icon = item.icon;
+
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`social-dock-item ${item.className}`}
+                  style={{
+                    transform: `scale(${scale}) translateY(${translateY})`,
+                    filter: hoveredIdx === index ? `drop-shadow(0 10px 25px ${item.glow})` : 'none',
+                  }}
+                  onMouseMove={(event) => handleDockMouseMove(event, index)}
+                  onMouseLeave={handleDockMouseLeave}
+                  aria-label={item.name}
+                >
+                  <div className="social-dock-icon-wrapper"><Icon /></div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export default function ProjectEnquiry() {
   const [formData, setFormData] = useState({
     name: '',
@@ -91,20 +162,19 @@ export default function ProjectEnquiry() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on click outside
+  // Close dropdown on pointer interaction outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: PointerEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside);
     };
   }, []);
 
@@ -117,11 +187,15 @@ export default function ProjectEnquiry() {
   };
 
   const toggleNeed = (label: string) => {
-    if (selectedNeeds.includes(label)) {
-      setSelectedNeeds(selectedNeeds.filter(n => n !== label));
-    } else {
-      setSelectedNeeds([...selectedNeeds, label]);
+    setSelectedNeeds((current) =>
+      current.includes(label)
+        ? current.filter((need) => need !== label)
+        : [...current, label],
+    );
+    if (errors.needs) {
+      setErrors((current) => ({ ...current, needs: '' }));
     }
+    setIsDropdownOpen(false);
   };
 
   const validate = () => {
@@ -189,124 +263,19 @@ export default function ProjectEnquiry() {
     }
   };
 
-  // High performance, direct style updates for mouse pointer tilt
-  const handleDockMouseMove = (e: React.MouseEvent<HTMLAnchorElement>, idx: number) => {
-    if ('ontouchstart' in window) return; // Disable on touch devices
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    
-    const maxTilt = 4; // Subtle 2-4 degree tilt
-    const tiltX = -((y / (rect.height / 2)) * maxTilt);
-    const tiltY = (x / (rect.width / 2)) * maxTilt;
-    
-    e.currentTarget.style.setProperty('--tilt-x', `${tiltX}deg`);
-    e.currentTarget.style.setProperty('--tilt-y', `${tiltY}deg`);
-    setHoveredIdx(idx);
-  };
-
-  const handleDockMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.setProperty('--tilt-x', '0deg');
-    e.currentTarget.style.setProperty('--tilt-y', '0deg');
-    setHoveredIdx(null);
-  };
-
   return (
     <section id="contact" className="py-24 bg-transparent scroll-mt-20 relative overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start max-w-7xl mx-auto relative z-10">
           
           {/* 1. LEFT COLUMN: Heading & Social Presence (Order 1 on mobile, span 5 on desktop) */}
-          <div className="lg:col-span-5 contact-intro-block">
-            <div>
-              <h2>
-                Have an idea <br />
-                worth <br />
-                shaping?
-              </h2>
-              
-              <div className="relative inline-block w-full max-w-[420px] pt-8 social-dock-wrapper mx-auto lg:mx-0">
-                {/* Crescent Moon Rim/Glow Backdrop */}
-                <div className="dock-moon-backdrop" />
-
-                <div 
-                  className="social-dock-capsule relative z-10"
-                  onMouseLeave={() => setHoveredIdx(null)}
-                >
-                  {[
-                    {
-                      name: 'Instagram',
-                      href: 'https://instagram.com/contentdost',
-                      icon: <InstagramIcon />,
-                      class: 'instagram',
-                      glow: 'rgba(225, 48, 108, 0.4)'
-                    },
-                    {
-                      name: 'LinkedIn',
-                      href: 'https://linkedin.com/company/contentdost',
-                      icon: <LinkedInIcon />,
-                      class: 'linkedin',
-                      glow: 'rgba(0, 119, 181, 0.4)'
-                    },
-                    {
-                      name: 'YouTube',
-                      href: 'https://youtube.com/contentdost',
-                      icon: <YouTubeIcon />,
-                      class: 'youtube',
-                      glow: 'rgba(255, 0, 0, 0.4)'
-                    },
-                    {
-                      name: 'Twitter X',
-                      href: 'https://twitter.com/contentdost',
-                      icon: <XIcon />,
-                      class: 'twitter',
-                      glow: 'rgba(255, 255, 255, 0.25)'
-                    }
-                  ].map((item, idx) => {
-                    const distance = hoveredIdx !== null ? Math.abs(hoveredIdx - idx) : null;
-                    let scale = 1;
-                    let translateY = '0px';
-
-                    if (distance === 0) {
-                      scale = 1.35;
-                      translateY = '-16px';
-                    } else if (distance === 1) {
-                      scale = 1.15;
-                      translateY = '-6px';
-                    }
-
-                    return (
-                      <a
-                        key={item.name}
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`social-dock-item ${item.class}`}
-                        style={{
-                          transform: `scale(${scale}) translateY(${translateY})`,
-                          filter: hoveredIdx === idx ? `drop-shadow(0 10px 25px ${item.glow})` : 'none'
-                        }}
-                        onMouseMove={(e) => handleDockMouseMove(e, idx)}
-                        onMouseLeave={handleDockMouseLeave}
-                        aria-label={item.name}
-                      >
-                        <div className="social-dock-icon-wrapper">
-                          {item.icon}
-                        </div>
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ContactIntro />
 
           {/* 2. RIGHT COLUMN: Form Card (Order 2 on mobile, spans 7 columns on desktop) */}
           <div className="lg:col-span-7 bg-[var(--ink-soft)] border border-white/5 rounded-2xl p-6 md:p-8 relative overflow-hidden contact-form-block">
             
             {!submitSuccess ? (
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="contact-form space-y-5">
                 
                 {/* GROUP 1: ABOUT YOU */}
                 <div className="form-group-section">
@@ -403,6 +372,10 @@ export default function ProjectEnquiry() {
                       }`}
                       aria-haspopup="listbox"
                       aria-expanded={isDropdownOpen}
+                      aria-controls="contact-service-options"
+                      onKeyDown={(event) => {
+                        if (event.key === 'Escape') setIsDropdownOpen(false);
+                      }}
                     >
                       <span className="truncate pr-4 text-white/70">
                         {selectedNeeds.length === 0 
@@ -418,7 +391,7 @@ export default function ProjectEnquiry() {
                     {/* Dropdown Menu Overlay */}
                     {isDropdownOpen && (
                       <div className="absolute z-50 left-0 right-0 w-full mt-1 bg-[#0b0d0a] border border-white/10 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                        <div className="p-1.5 space-y-0.5" role="listbox" aria-label="Services list">
+                        <div id="contact-service-options" className="p-1.5 space-y-0.5" role="listbox" aria-label="Services list">
                           {needsOptions.map((opt) => {
                             const isSelected = selectedNeeds.includes(opt.label);
                             return (
@@ -427,6 +400,15 @@ export default function ProjectEnquiry() {
                                 onClick={() => toggleNeed(opt.label)}
                                 role="option"
                                 aria-selected={isSelected}
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    toggleNeed(opt.label);
+                                  } else if (event.key === 'Escape') {
+                                    setIsDropdownOpen(false);
+                                  }
+                                }}
                                 className={`w-full px-4 py-3 rounded text-left text-xs md:text-sm font-sans transition-all flex items-center justify-between cursor-pointer ${
                                   isSelected 
                                     ? 'bg-[var(--lime)]/10 text-white font-medium' 

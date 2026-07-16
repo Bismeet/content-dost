@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  CONTACT_EDITING_CHANGE_EVENT,
+  isContactEditing,
+} from '../../lib/contactFocus';
 
 type StarType = 'small' | 'medium' | 'feature';
 
@@ -355,6 +359,11 @@ export default function ShootingStarsBackground() {
     stopLoopRef.current = stopLoop;
 
     const resize = () => {
+      const currentProfile = profileRef.current;
+      const widthChanged = currentProfile
+        ? Math.abs(document.documentElement.clientWidth - currentProfile.width) > 2
+        : true;
+      if (isContactEditing() && !widthChanged) return;
       const profile = getDeviceProfile();
       profileRef.current = profile;
       canvas.width = Math.floor(profile.width * profile.dpr);
@@ -373,6 +382,15 @@ export default function ShootingStarsBackground() {
       lastFrameRef.current = 0;
     };
 
+    const onContactEditingChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ active: boolean }>;
+      if (customEvent.detail.active) {
+        stopLoop();
+      } else if (visibleRef.current && documentVisibleRef.current && !reducedMotion) {
+        startLoop();
+      }
+    };
+
     const intersectionObserver = new IntersectionObserver(
       ([entry]) => updateVisibility(entry.isIntersecting),
       { threshold: 0 },
@@ -381,6 +399,7 @@ export default function ShootingStarsBackground() {
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(document.documentElement);
     document.addEventListener('visibilitychange', onVisibilityChange);
+    document.addEventListener(CONTACT_EDITING_CHANGE_EVENT, onContactEditingChange);
     resize();
     if (reducedMotion) render(performance.now(), 0, false);
 
@@ -390,6 +409,7 @@ export default function ShootingStarsBackground() {
       intersectionObserver.disconnect();
       resizeObserver?.disconnect();
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      document.removeEventListener(CONTACT_EDITING_CHANGE_EVENT, onContactEditingChange);
       dustRef.current = [];
       starsRef.current = [];
       profileRef.current = null;

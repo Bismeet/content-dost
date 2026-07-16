@@ -1504,6 +1504,20 @@ section[id] {
   /* Cleaned old process stage mobile overrides */
   .post-hero-site #contact .lg\:col-span-7 { padding: 1.25rem !important; backdrop-filter: blur(10px); }
   .post-hero-site #contact form .grid { grid-template-columns: minmax(0,1fr) !important; }
+  .post-hero-site #contact .contact-form { width: 100%; }
+  .post-hero-site #contact .contact-form input,
+  .post-hero-site #contact .contact-form textarea,
+  .post-hero-site #contact .contact-form select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+  .post-hero-site #contact .contact-form textarea { resize: vertical; }
+  .post-hero-site #contact .contact-form button { min-height: 44px; }
+}
+
+html[data-contact-editing] #contact .pulse-dot {
+  animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {

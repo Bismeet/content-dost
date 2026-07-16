@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { getLenisInstance } from '../lib/smoothScroll';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { isContactEditing } from '../lib/contactFocus';
 
 const navigationItems = [
   { label: "Services", id: "services", href: "#services" },
@@ -52,6 +53,7 @@ export default function Navbar() {
 
       observer = new IntersectionObserver(
         ([entry]) => {
+          if (isContactEditing()) return;
           const sentinelTop = entry.boundingClientRect.top;
           const isPastHero = !entry.isIntersecting && sentinelTop < 0;
           if (isPastHero !== isVisibleRef.current) {
@@ -84,6 +86,7 @@ export default function Navbar() {
 
     const observer = new IntersectionObserver(
       (entries) => {
+        if (isContactEditing()) return;
         entries.forEach((entry) => {
           sectionStates[entry.target.id] = {
             isIntersecting: entry.isIntersecting,
@@ -271,7 +274,7 @@ export default function Navbar() {
       lenis?.start();
       requestAnimationFrame(() => {
         lenis?.resize();
-        ScrollTrigger.refresh();
+        if (!isContactEditing()) ScrollTrigger.refresh();
       });
     }
     return () => {
