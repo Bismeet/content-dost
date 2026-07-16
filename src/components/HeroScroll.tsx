@@ -11,6 +11,21 @@ gsap.registerPlugin(ScrollTrigger);
 const TOTAL_FRAMES = frameManifest.length;
 const BASE_PATH = '/hero-sequence/';
 const FRAME_URLS = frameManifest.map((filename) => `${BASE_PATH}${filename}`);
+const DESKTOP_HERO_SCROLL_MULTIPLIER = 2.2;
+const MOBILE_HERO_SCROLL_MULTIPLIER = 3.4;
+const MOBILE_LANDSCAPE_HERO_SCROLL_MULTIPLIER = 2.8;
+const MOBILE_HERO_MEDIA_QUERY =
+  '(max-width: 767px), (max-width: 1024px) and (max-height: 500px) and (orientation: landscape)';
+const DESKTOP_HERO_MEDIA_QUERY =
+  '(min-width: 768px) and (min-height: 501px), (min-width: 1025px)';
+
+const getMobileViewportHeight = () =>
+  window.visualViewport?.height ?? window.innerHeight;
+
+const getMobileHeroScrollMultiplier = () =>
+  window.innerWidth > window.innerHeight
+    ? MOBILE_LANDSCAPE_HERO_SCROLL_MULTIPLIER
+    : MOBILE_HERO_SCROLL_MULTIPLIER;
 
 const MESSAGES = [
   {
@@ -168,68 +183,6 @@ export default function HeroScroll() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Intercept and clamp touch/swipe momentum in the Hero pinning zone on mobile/tablet devices
-  useEffect(() => {
-    if (window.innerWidth >= 1024) return;
-
-    let touchStartY = 0;
-    let touchStartX = 0;
-    let startScrollY = 0;
-    let isIntercepting = false;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      touchStartY = e.touches[0].clientY;
-      touchStartX = e.touches[0].clientX;
-      startScrollY = window.scrollY;
-
-      const pinDuration = window.innerHeight * 2.2;
-      if (startScrollY < pinDuration) {
-        isIntercepting = true;
-      } else {
-        isIntercepting = false;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isIntercepting || e.touches.length !== 1) return;
-
-      const currentY = e.touches[0].clientY;
-      const currentX = e.touches[0].clientX;
-      const deltaY = touchStartY - currentY;
-      const deltaX = touchStartX - currentX;
-
-      if (Math.abs(deltaY) < Math.abs(deltaX)) {
-        return;
-      }
-
-      const maxDelta = window.innerHeight * 0.65;
-
-      const clampedDelta = Math.max(-maxDelta, Math.min(maxDelta, deltaY));
-      const targetScrollY = startScrollY + clampedDelta;
-
-      if (e.cancelable) {
-        e.preventDefault();
-      }
-
-      window.scrollTo(0, targetScrollY);
-    };
-
-    const handleTouchEnd = () => {
-      isIntercepting = false;
-    };
-
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, []);
-
   // PixiJS renderer with retained Canvas 2D fallback.
   useEffect(() => {
     const container = heroViewportRef.current;
@@ -283,6 +236,8 @@ export default function HeroScroll() {
 
   // GSAP ScrollTrigger layout pinning logic
   useLayoutEffect(() => {
+    if (!isFirstFrameLoaded) return;
+
     if (prefersReducedMotion) {
       // If prefers-reduced-motion is active, make sure elements are at their final state and navbar is visible
       gsap.set('.js-hero-opening', { opacity: 0, y: -24 });
@@ -298,200 +253,245 @@ export default function HeroScroll() {
 
     if (!section || !rendererViewport) return;
 
-    // Set initial states of DOM components before timeline plays
-    gsap.set('.js-hero-opening', { opacity: 1, y: 0 });
-    gsap.set('.js-paper-overlay', { opacity: 0 });
-    gsap.set('.js-message-0', { opacity: 0, y: 15, visibility: 'hidden' });
-    gsap.set('.js-message-1', { opacity: 0, y: 15, visibility: 'hidden' });
-    gsap.set('.js-message-2', { opacity: 0, y: 15, visibility: 'hidden' });
-    gsap.set('.hero-final-veil', { opacity: 0 });
-    gsap.set('.hero-final-reveal', { opacity: 0, y: 24, xPercent: -50, yPercent: -50 });
-    gsap.set('.hero-final-actions', { opacity: 0, y: 12 });
+    const media = gsap.matchMedia();
 
-    const frameState = {
-      progress: 0,
-    };
+    media.add(
+      {
+        isMobile: MOBILE_HERO_MEDIA_QUERY,
+        isDesktop: DESKTOP_HERO_MEDIA_QUERY,
+        isLandscape: '(orientation: landscape)',
+      },
+      (mediaContext) => {
+        const isMobile = Boolean(mediaContext.conditions?.isMobile);
 
-    const context = gsap.context(() => {
-      // Create master timeline
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: 'top top',
-          end: () => {
-            const h = window.innerHeight;
-            return `+=${h * 2.2}`; // 220vh scroll distance for stable speed
-          },
-          pin: true,
-          pinSpacing: true,
-          scrub: 0.75, // smooth scrub response
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            // Track scroll progress internally & update positioning
-            scrollValRef.current = self.progress;
-            updatePaperLayout(self.progress);
-          },
-          onLeave: () => {
-            scrollValRef.current = 1;
-            updatePaperLayout(1);
-          }
-        },
-      });
+        const animationContext = gsap.context(() => {
+          // Reset the existing Hero stages whenever the responsive mode changes.
+          gsap.set('.js-hero-opening', { opacity: 1, y: 0 });
+          gsap.set('.js-paper-overlay', { opacity: 0 });
+          gsap.set('.js-message-0', { opacity: 0, y: 15, visibility: 'hidden' });
+          gsap.set('.js-message-1', { opacity: 0, y: 15, visibility: 'hidden' });
+          gsap.set('.js-message-2', { opacity: 0, y: 15, visibility: 'hidden' });
+          gsap.set('.hero-final-veil', { opacity: 0 });
+          gsap.set('.hero-final-reveal', { opacity: 0, y: 24, xPercent: -50, yPercent: -50 });
+          gsap.set('.hero-final-actions', { opacity: 0, y: 12 });
 
-      // 1. Frame sequence animation (entire timeline duration: 10)
-      tl.to(frameState, {
-        progress: 1,
-        ease: 'none',
-        duration: 9.2,
-        onUpdate: () => {
-          if (!isFirstFrameLoaded) return;
-          const frameIndex = Math.min(
-            TOTAL_FRAMES - 1,
-            Math.floor(frameState.progress * (TOTAL_FRAMES - 1))
+          const frameState = {
+            progress: 0,
+          };
+
+          // One responsive timeline owns the Hero pin for the active media mode.
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: section,
+              start: 'top top',
+              end: () => {
+                if (!isMobile) {
+                  return `+=${window.innerHeight * DESKTOP_HERO_SCROLL_MULTIPLIER}`;
+                }
+
+                return `+=${getMobileViewportHeight() * getMobileHeroScrollMultiplier()}`;
+              },
+              pin: true,
+              pinSpacing: true,
+              scrub: isMobile ? 0.7 : 0.75,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+              onUpdate: (self) => {
+                // Track scroll progress internally & update positioning
+                scrollValRef.current = self.progress;
+                updatePaperLayout(self.progress);
+              },
+              onLeave: () => {
+                scrollValRef.current = 1;
+                updatePaperLayout(1);
+              }
+            },
+          });
+
+          // 1. Frame sequence animation (entire timeline duration: 10)
+          tl.to(frameState, {
+            progress: 1,
+            ease: 'none',
+            duration: 9.2,
+            onUpdate: () => {
+              if (!isFirstFrameLoaded) return;
+              const frameIndex = Math.min(
+                TOTAL_FRAMES - 1,
+                Math.floor(frameState.progress * (TOTAL_FRAMES - 1))
+              );
+              requestFrameRender(frameIndex);
+            }
+          }, 0);
+
+          // 2. Opening copy fade out (Beat 01)
+          tl.to('.js-hero-opening', {
+            opacity: 0,
+            y: -24,
+            duration: 1.2
+          }, 0.8);
+
+          // 3. Paper overlay container fade in
+          tl.to('.js-paper-overlay', {
+            opacity: 1,
+            duration: 0.5
+          }, 1.8);
+
+          // 4. Message 0 (STRATEGY) (Beat 02 & 03)
+          tl.set('.js-message-0', { visibility: 'visible' }, 1.8);
+          tl.to('.js-message-0', { opacity: 1, y: 0, duration: 0.1 }, 1.8);
+          tl.fromTo('.js-message-0 .hero-paper-eyebrow',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            1.8
           );
-          requestFrameRender(frameIndex);
-        }
-      }, 0);
+          tl.fromTo('.js-message-0 .hero-paper-title',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            2.1
+          );
+          tl.fromTo('.js-message-0 .hero-paper-description',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            2.4
+          );
+          // Fade out Message 0
+          tl.to('.js-message-0', {
+            opacity: 0,
+            y: -15,
+            duration: 0.5
+          }, 3.6);
+          tl.set('.js-message-0', { visibility: 'hidden' }, 4.1);
 
-      // 2. Opening copy fade out (Beat 01)
-      tl.to('.js-hero-opening', {
-        opacity: 0,
-        y: -24,
-        duration: 1.2
-      }, 0.8);
+          // 5. Message 1 (SCRIPTWRITING) (Beat 04 & 05)
+          tl.set('.js-message-1', { visibility: 'visible' }, 4.1);
+          tl.to('.js-message-1', { opacity: 1, y: 0, duration: 0.1 }, 4.1);
+          tl.fromTo('.js-message-1 .hero-paper-eyebrow',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            4.1
+          );
+          tl.fromTo('.js-message-1 .hero-paper-title',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            4.4
+          );
+          tl.fromTo('.js-message-1 .hero-paper-description',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            4.7
+          );
+          // Fade out Message 1
+          tl.to('.js-message-1', {
+            opacity: 0,
+            y: -15,
+            duration: 0.5
+          }, 5.9);
+          tl.set('.js-message-1', { visibility: 'hidden' }, 6.4);
 
-      // 3. Paper overlay container fade in
-      tl.to('.js-paper-overlay', {
-        opacity: 1,
-        duration: 0.5
-      }, 1.8);
+          // 6. Message 2 (EDITING) (Beat 07 & 08)
+          tl.set('.js-message-2', { visibility: 'visible' }, 6.4);
+          tl.to('.js-message-2', { opacity: 1, y: 0, duration: 0.1 }, 6.4);
+          tl.fromTo('.js-message-2 .hero-paper-eyebrow',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            6.4
+          );
+          tl.fromTo('.js-message-2 .hero-paper-title',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            6.7
+          );
+          tl.fromTo('.js-message-2 .hero-paper-description',
+            { opacity: 0, y: 15 },
+            { opacity: 1, y: 0, duration: 0.5 },
+            7.0
+          );
+          // Fade out Message 2 and container
+          tl.to('.js-message-2', {
+            opacity: 0,
+            y: -15,
+            duration: 0.5
+          }, 8.0);
+          tl.set('.js-message-2', { visibility: 'hidden' }, 8.5);
+          tl.to('.js-paper-overlay', {
+            opacity: 0,
+            duration: 0.5
+          }, 8.0);
 
-      // 4. Message 0 (STRATEGY) (Beat 02 & 03)
-      tl.set('.js-message-0', { visibility: 'visible' }, 1.8);
-      tl.to('.js-message-0', { opacity: 1, y: 0, duration: 0.1 }, 1.8);
-      tl.fromTo('.js-message-0 .hero-paper-eyebrow', 
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        1.8
-      );
-      tl.fromTo('.js-message-0 .hero-paper-title',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        2.1
-      );
-      tl.fromTo('.js-message-0 .hero-paper-description',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        2.4
-      );
-      // Fade out Message 0
-      tl.to('.js-message-0', {
-        opacity: 0,
-        y: -15,
-        duration: 0.5
-      }, 3.6);
-      tl.set('.js-message-0', { visibility: 'hidden' }, 4.1);
+          // 7. Final Reveal (Beat 09 & 10)
+          tl.fromTo('.hero-final-veil',
+            { opacity: 0 },
+            { opacity: 1, duration: 0.8 },
+            8.2
+          );
+          tl.fromTo('.hero-final-reveal',
+            { opacity: 0, y: 24, xPercent: -50, yPercent: -50 },
+            { opacity: 1, y: 0, xPercent: -50, yPercent: -50, duration: 0.8 },
+            8.2
+          );
+          tl.fromTo('.hero-final-actions',
+            { opacity: 0, y: 12 },
+            { opacity: 1, y: 0, duration: 0.6 },
+            8.7
+          );
 
-      // 5. Message 1 (SCRIPTWRITING) (Beat 04 & 05)
-      tl.set('.js-message-1', { visibility: 'visible' }, 4.1);
-      tl.to('.js-message-1', { opacity: 1, y: 0, duration: 0.1 }, 4.1);
-      tl.fromTo('.js-message-1 .hero-paper-eyebrow',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        4.1
-      );
-      tl.fromTo('.js-message-1 .hero-paper-title',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        4.4
-      );
-      tl.fromTo('.js-message-1 .hero-paper-description',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        4.7
-      );
-      // Fade out Message 1
-      tl.to('.js-message-1', {
-        opacity: 0,
-        y: -15,
-        duration: 0.5
-      }, 5.9);
-      tl.set('.js-message-1', { visibility: 'hidden' }, 6.4);
+          // 8. Completed timeline end without hiding navbar
+        }, section);
 
-      // 6. Message 2 (EDITING) (Beat 07 & 08)
-      tl.set('.js-message-2', { visibility: 'visible' }, 6.4);
-      tl.to('.js-message-2', { opacity: 1, y: 0, duration: 0.1 }, 6.4);
-      tl.fromTo('.js-message-2 .hero-paper-eyebrow',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        6.4
-      );
-      tl.fromTo('.js-message-2 .hero-paper-title',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        6.7
-      );
-      tl.fromTo('.js-message-2 .hero-paper-description',
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        7.0
-      );
-      // Fade out Message 2 and container
-      tl.to('.js-message-2', {
-        opacity: 0,
-        y: -15,
-        duration: 0.5
-      }, 8.0);
-      tl.set('.js-message-2', { visibility: 'hidden' }, 8.5);
-      tl.to('.js-paper-overlay', {
-        opacity: 0,
-        duration: 0.5
-      }, 8.0);
+        updatePaperLayout(0);
 
-      // 7. Final Reveal (Beat 09 & 10)
-      tl.fromTo('.hero-final-veil',
-        { opacity: 0 },
-        { opacity: 1, duration: 0.8 },
-        8.2
-      );
-      tl.fromTo('.hero-final-reveal',
-        { opacity: 0, y: 24, xPercent: -50, yPercent: -50 },
-        { opacity: 1, y: 0, xPercent: -50, yPercent: -50, duration: 0.8 },
-        8.2
-      );
-      tl.fromTo('.hero-final-actions',
-        { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.6 },
-        8.7
-      );
-
-      // 8. Completed timeline end without hiding navbar
-
-    }, section);
+        return () => {
+          animationContext.revert();
+        };
+      },
+    );
 
     // Initial layout sync once trigger binds
-    updatePaperLayout(0);
     ScrollTrigger.refresh();
+
+    let viewportRefreshTimer: number | null = null;
+    const refreshAfterMobileViewportChange = () => {
+      if (!window.matchMedia(MOBILE_HERO_MEDIA_QUERY).matches) return;
+
+      if (viewportRefreshTimer !== null) {
+        window.clearTimeout(viewportRefreshTimer);
+      }
+
+      viewportRefreshTimer = window.setTimeout(() => {
+        viewportRefreshTimer = null;
+        ScrollTrigger.refresh();
+      }, 180);
+    };
+
+    window.visualViewport?.addEventListener('resize', refreshAfterMobileViewportChange);
+    window.addEventListener('orientationchange', refreshAfterMobileViewportChange);
 
     // Initial hash navigation scroll bypass
     const hash = window.location.hash;
     if (hash && hash !== '#') {
       const target = document.querySelector(hash);
       if (target) {
+        ScrollTrigger.refresh();
+
         const lenis = getLenisInstance();
         if (lenis) {
+          lenis.resize();
           lenis.scrollTo(target as HTMLElement, {
             immediate: true,
             offset: -96,
           });
-          ScrollTrigger.refresh();
+          ScrollTrigger.update();
         }
       }
     }
 
     return () => {
-      context.revert();
+      if (viewportRefreshTimer !== null) {
+        window.clearTimeout(viewportRefreshTimer);
+      }
+      window.visualViewport?.removeEventListener('resize', refreshAfterMobileViewportChange);
+      window.removeEventListener('orientationchange', refreshAfterMobileViewportChange);
+      media.revert();
     };
   }, [isFirstFrameLoaded, prefersReducedMotion]);
 
