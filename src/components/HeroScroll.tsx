@@ -9,9 +9,16 @@ import { getViewportOrientation, isContactEditing } from '../lib/contactFocus';
 // Register GSAP ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger);
 
-const TOTAL_FRAMES = frameManifest.length;
-const BASE_PATH = '/hero-sequence/';
-const FRAME_URLS = frameManifest.map((filename) => `${BASE_PATH}${filename}`);
+const DESKTOP_BASE_PATH = '/hero-sequence/';
+const DESKTOP_FRAME_URLS = frameManifest.map((filename) => `${DESKTOP_BASE_PATH}${filename}`);
+
+const MOBILE_FRAME_COUNT = 216;
+const MOBILE_BASE_PATH = '/hero-sequence-mobile/';
+const MOBILE_FRAME_URLS = Array.from(
+  { length: MOBILE_FRAME_COUNT },
+  (_, i) => `${MOBILE_BASE_PATH}ezgif-frame-${String(i + 1).padStart(3, '0')}.jpg`
+);
+
 const DESKTOP_HERO_SCROLL_MULTIPLIER = 2.2;
 const MOBILE_HERO_SCROLL_MULTIPLIER = 3.4;
 const MOBILE_LANDSCAPE_HERO_SCROLL_MULTIPLIER = 2.8;
@@ -122,6 +129,11 @@ export default function HeroScroll() {
   const [isFirstFrameLoaded, setIsFirstFrameLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [useMobileFrames, setUseMobileFrames] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.innerWidth < 1025 && window.innerWidth < window.innerHeight
+      : false
+  );
   
   // Real scroll progress for overlay rendering
   const scrollValRef = useRef(0);
@@ -167,8 +179,9 @@ export default function HeroScroll() {
     const viewportHeight = dims.height;
 
     // Source frame dimensions
-    const sourceWidth = 1920;
-    const sourceHeight = 1080;
+    const isMobile = window.innerWidth < 1025 && window.innerWidth < window.innerHeight;
+    const sourceWidth = isMobile ? 1080 : 1920;
+    const sourceHeight = isMobile ? 1920 : 1080;
 
     const scale = Math.max(
       viewportWidth / sourceWidth,
@@ -181,7 +194,6 @@ export default function HeroScroll() {
     const offsetX = (viewportWidth - renderedWidth) / 2;
     const offsetY = (viewportHeight - renderedHeight) / 2;
 
-    const isMobile = window.innerWidth < 768;
     const bounds = getInterpolatedBounds(progress, isMobile);
 
     const paperLeft = offsetX + bounds.x * renderedWidth;
@@ -213,6 +225,14 @@ export default function HeroScroll() {
       previousOrientation = nextOrientation;
       updateCachedDimensions();
       updatePaperLayout();
+
+      const nextUseMobile = window.innerWidth < 1025 && window.innerWidth < window.innerHeight;
+      setUseMobileFrames((prev) => {
+        if (prev !== nextUseMobile) {
+          return nextUseMobile;
+        }
+        return prev;
+      });
     };
     window.addEventListener('resize', handleResize);
     updatePaperLayout();
@@ -231,10 +251,14 @@ export default function HeroScroll() {
     const forceCanvas = debugEnabled && new URLSearchParams(window.location.search).get('renderer') === 'canvas';
     const preferHtmlImages = debugEnabled && new URLSearchParams(window.location.search).get('source') === 'html';
     const simulateContextLoss = debugEnabled && new URLSearchParams(window.location.search).has('context-loss');
+    
+    const frameUrls = useMobileFrames ? MOBILE_FRAME_URLS : DESKTOP_FRAME_URLS;
+    const totalFrames = frameUrls.length;
+
     const renderer = new HeroSequenceRenderer({
       container,
       fallbackCanvas,
-      frameUrls: FRAME_URLS,
+      frameUrls: frameUrls,
       onFirstFrame: () => {
         if (disposed) return;
         setIsFirstFrameLoaded(true);
@@ -250,7 +274,7 @@ export default function HeroScroll() {
       simulateContextLoss,
     });
     sequenceRendererRef.current = renderer;
-    void renderer.init(prefersReducedMotion ? TOTAL_FRAMES - 1 : 0)
+    void renderer.init(prefersReducedMotion ? totalFrames - 1 : 0)
       .then(() => {
         if (debugEnabled && !disposed) {
           (window as Window & { __HERO_RENDERER_DEBUG__?: HeroSequenceRenderer }).__HERO_RENDERER_DEBUG__ = renderer;
@@ -268,7 +292,7 @@ export default function HeroScroll() {
       if (sequenceRendererRef.current === renderer) sequenceRendererRef.current = null;
       renderer.destroy();
     };
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, useMobileFrames]);
 
   // GSAP ScrollTrigger layout pinning logic
   useLayoutEffect(() => {
@@ -351,9 +375,11 @@ export default function HeroScroll() {
             duration: 9.2,
             onUpdate: () => {
               if (!isFirstFrameLoaded) return;
+              const frameUrls = useMobileFrames ? MOBILE_FRAME_URLS : DESKTOP_FRAME_URLS;
+              const totalFrames = frameUrls.length;
               const frameIndex = Math.min(
-                TOTAL_FRAMES - 1,
-                Math.floor(frameState.progress * (TOTAL_FRAMES - 1))
+                totalFrames - 1,
+                Math.floor(frameState.progress * (totalFrames - 1))
               );
               requestFrameRender(frameIndex);
             }
@@ -507,7 +533,7 @@ export default function HeroScroll() {
     return () => {
       media.revert();
     };
-  }, [isFirstFrameLoaded, prefersReducedMotion]);
+  }, [isFirstFrameLoaded, prefersReducedMotion, useMobileFrames]);
 
 
   return (
