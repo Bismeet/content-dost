@@ -248,7 +248,7 @@ export default function HeroScroll() {
     setIsFirstFrameLoaded(false);
     setLoadingProgress(0);
     const debugEnabled = import.meta.env.DEV && new URLSearchParams(window.location.search).has('debug');
-    const forceCanvas = debugEnabled && new URLSearchParams(window.location.search).get('renderer') === 'canvas';
+    const forceCanvas = (debugEnabled && new URLSearchParams(window.location.search).get('renderer') === 'canvas') || useMobileFrames;
     const preferHtmlImages = debugEnabled && new URLSearchParams(window.location.search).get('source') === 'html';
     const simulateContextLoss = debugEnabled && new URLSearchParams(window.location.search).has('context-loss');
     

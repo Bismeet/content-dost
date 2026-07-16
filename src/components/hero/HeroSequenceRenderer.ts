@@ -74,6 +74,7 @@ class CanvasSequenceFallback {
   private currentSource: DecodedFrame | null = null;
   private readonly canvas: HTMLCanvasElement;
   private readonly container: HTMLElement;
+  private cachedRect: DOMRect | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -91,6 +92,10 @@ class CanvasSequenceFallback {
     this.canvas.hidden = true;
   }
 
+  clearCache() {
+    this.cachedRect = null;
+  }
+
   render(source: DecodedFrame) {
     this.currentSource = source;
     this.resize();
@@ -101,7 +106,10 @@ class CanvasSequenceFallback {
     const context = this.canvas.getContext('2d');
     if (!context) return;
 
-    const rect = this.container.getBoundingClientRect();
+    if (!this.cachedRect) {
+      this.cachedRect = this.container.getBoundingClientRect();
+    }
+    const rect = this.cachedRect;
     const dpr = window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
     const pixelWidth = Math.max(1, Math.round(rect.width * dpr));
     const pixelHeight = Math.max(1, Math.round(rect.height * dpr));
@@ -361,6 +369,7 @@ export class HeroSequenceRenderer {
 
   private resize() {
     if (this.destroyed) return;
+    this.fallback.clearCache();
     this.fallback.resize();
     if (!this.app || !this.sprite || this.usingCanvas) return;
     this.app.resize();
