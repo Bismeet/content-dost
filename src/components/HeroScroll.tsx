@@ -12,7 +12,7 @@ gsap.registerPlugin(ScrollTrigger);
 const DESKTOP_BASE_PATH = '/hero-sequence/';
 const DESKTOP_FRAME_URLS = frameManifest.map((filename) => `${DESKTOP_BASE_PATH}${filename}`);
 
-const MOBILE_FRAME_COUNT = 216;
+const MOBILE_FRAME_COUNT = 140;
 const MOBILE_BASE_PATH = '/hero-sequence-mobile/';
 const MOBILE_FRAME_URLS = Array.from(
   { length: MOBILE_FRAME_COUNT },
