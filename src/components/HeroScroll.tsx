@@ -23,6 +23,7 @@ const DESKTOP_HERO_SCROLL_MULTIPLIER = 2.2;
 const MOBILE_HERO_SCROLL_MULTIPLIER = 3.4;
 const MOBILE_LANDSCAPE_HERO_SCROLL_MULTIPLIER = 2.8;
 const MOBILE_MAX_FRAME_STEP = 1;
+const MOBILE_FORWARD_EXIT_GATE_PROGRESS = 0.68;
 const getMobileDecodeSize = () => window.innerWidth < 600
   ? { width: 540, height: 960 } as const
   : { width: 720, height: 1280 } as const;
@@ -128,6 +129,11 @@ export default function HeroScroll() {
   const fallbackCanvasRef = useRef<HTMLCanvasElement>(null);
   const sequenceRendererRef = useRef<HeroSequenceRenderer | null>(null);
   const mobileFrameProgressHandlerRef = useRef<((progress: number) => void) | null>(null);
+  const mobileForwardGateRef = useRef(false);
+  const mobileFinalFrameReadyRef = useRef(false);
+  const mobileForwardGateStartYRef = useRef(0);
+  const mobileForwardGateYRef = useRef(0);
+  const mobileHeroEndYRef = useRef(0);
 
 
   // States
@@ -156,9 +162,108 @@ export default function HeroScroll() {
   }, []);
 
   // GSAP remains the only source of truth; the renderer owns scheduling and caches.
-  const requestFrameRender = (frameIndex: number) => {
-    sequenceRendererRef.current?.requestFrame(frameIndex);
+  const requestFrameRender = (
+    frameIndex: number,
+    options: { holdAsGateTarget?: boolean; immediate?: boolean } = {},
+  ) => {
+    if (mobileForwardGateRef.current && !options.holdAsGateTarget) return;
+    sequenceRendererRef.current?.requestFrame(frameIndex, { immediate: options.immediate });
   };
+
+  const releaseMobileForwardGate = () => {
+    if (!mobileForwardGateRef.current) return;
+    mobileForwardGateRef.current = false;
+    getLenisInstance()?.start();
+  };
+
+  const engageMobileForwardGate = (scrollY = window.scrollY) => {
+    if (mobileForwardGateRef.current || mobileFinalFrameReadyRef.current) return;
+    mobileForwardGateRef.current = true;
+    mobileForwardGateStartYRef.current = scrollY;
+    const lenis = getLenisInstance();
+    // Clamp pending momentum to the gate, never to a position behind the user.
+    lenis?.scrollTo(scrollY, { immediate: true, force: true });
+    lenis?.stop();
+    requestFrameRender(MOBILE_FRAME_URLS.length - 1, { holdAsGateTarget: true });
+  };
+
+  // A second strong mobile swipe can otherwise outrun the one-frame-per-tick
+  // renderer and carry the page beyond the pinned Hero. Absorb only forward
+  // input while the final frames catch up; reverse scrolling always stays native.
+  useEffect(() => {
+    if (!useMobileFrames) return;
+
+    let lastTouchY: number | null = null;
+    const handleTouchStart = (event: TouchEvent) => {
+      lastTouchY = event.touches[0]?.clientY ?? null;
+    };
+    const handleTouchMove = (event: TouchEvent) => {
+      const touchY = event.touches[0]?.clientY;
+      if (touchY === undefined) return;
+      const deltaY = lastTouchY === null ? 0 : lastTouchY - touchY;
+      const isForward = deltaY > 0;
+      lastTouchY = touchY;
+      if (!mobileForwardGateRef.current) {
+        const gateY = mobileForwardGateYRef.current;
+        if (
+          isForward
+          && gateY > 0
+          && window.scrollY + deltaY >= gateY
+          && !mobileFinalFrameReadyRef.current
+        ) {
+          event.preventDefault();
+          engageMobileForwardGate(gateY);
+        }
+        return;
+      }
+      if (window.scrollY < mobileForwardGateStartYRef.current - 4 || !isForward) {
+        releaseMobileForwardGate();
+        return;
+      }
+      event.preventDefault();
+    };
+    const handleTouchEnd = () => {
+      lastTouchY = null;
+    };
+    const handleWheel = (event: WheelEvent) => {
+      if (!mobileForwardGateRef.current) {
+        const gateY = mobileForwardGateYRef.current;
+        const lenis = getLenisInstance();
+        const projectedY = (lenis?.targetScroll ?? window.scrollY) + event.deltaY;
+        if (
+          event.deltaY > 0
+          && gateY > 0
+          && projectedY >= gateY
+          && !mobileFinalFrameReadyRef.current
+        ) {
+          event.preventDefault();
+          engageMobileForwardGate(gateY);
+        }
+        return;
+      }
+      if (window.scrollY < mobileForwardGateStartYRef.current - 4 || event.deltaY < 0) {
+        releaseMobileForwardGate();
+        return;
+      }
+      if (event.deltaY > 0) event.preventDefault();
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true, capture: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true, capture: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true, capture: true });
+    window.addEventListener('wheel', handleWheel, { passive: false, capture: true });
+
+    return () => {
+      mobileForwardGateRef.current = false;
+      getLenisInstance()?.start();
+      window.removeEventListener('touchstart', handleTouchStart, true);
+      window.removeEventListener('touchmove', handleTouchMove, true);
+      window.removeEventListener('touchend', handleTouchEnd, true);
+      window.removeEventListener('touchcancel', handleTouchEnd, true);
+      window.removeEventListener('wheel', handleWheel, true);
+    };
+  }, [useMobileFrames]);
 
   const updateCachedDimensions = () => {
     const viewport = heroViewportRef.current;
@@ -274,7 +379,18 @@ export default function HeroScroll() {
       },
       onFrameRendered: (frameIndex) => {
         if (!useMobileFrames || disposed) return;
-        mobileFrameProgressHandlerRef.current?.(frameIndex / Math.max(1, totalFrames - 1));
+        const progress = frameIndex / Math.max(1, totalFrames - 1);
+        if (frameIndex === totalFrames - 1) {
+          mobileFinalFrameReadyRef.current = true;
+          const heroEndY = mobileHeroEndYRef.current;
+          if (mobileForwardGateRef.current && heroEndY > window.scrollY) {
+            // The viewport is still pinned, so advancing the hidden scroll
+            // coordinate to the completed timeline causes no visual jump.
+            getLenisInstance()?.scrollTo(heroEndY, { immediate: true, force: true });
+          }
+          releaseMobileForwardGate();
+        }
+        mobileFrameProgressHandlerRef.current?.(progress);
       },
       onLoadingProgress: (progress) => {
         if (!disposed) setLoadingProgress(progress);
@@ -372,17 +488,54 @@ export default function HeroScroll() {
               scrub: useMobileFrames ? true : 0.75,
               anticipatePin: 1,
               invalidateOnRefresh: true,
+              onRefresh: (self) => {
+                if (useMobileFrames) {
+                  mobileHeroEndYRef.current = self.end;
+                  mobileForwardGateYRef.current = self.start
+                    + (self.end - self.start) * MOBILE_FORWARD_EXIT_GATE_PROGRESS;
+                }
+              },
               onUpdate: (self) => {
-                if (useMobileFrames) return;
+                if (useMobileFrames) {
+                  mobileHeroEndYRef.current = self.end;
+                  mobileForwardGateYRef.current = self.start
+                    + (self.end - self.start) * MOBILE_FORWARD_EXIT_GATE_PROGRESS;
+                  if (self.progress < MOBILE_FORWARD_EXIT_GATE_PROGRESS) {
+                    if (!mobileForwardGateRef.current) {
+                      mobileFinalFrameReadyRef.current = false;
+                    }
+                  } else if (!mobileFinalFrameReadyRef.current && !mobileForwardGateRef.current) {
+                    engageMobileForwardGate();
+                  }
+                  return;
+                }
                 // Desktop remains directly synchronized to scroll progress.
                 scrollValRef.current = self.progress;
                 updatePaperLayout(self.progress);
               },
               onLeave: () => {
-                if (useMobileFrames) return;
+                if (useMobileFrames) {
+                  releaseMobileForwardGate();
+                  return;
+                }
                 scrollValRef.current = 1;
                 updatePaperLayout(1);
-              }
+              },
+              onEnterBack: () => {
+                if (useMobileFrames) {
+                  releaseMobileForwardGate();
+                  mobileFinalFrameReadyRef.current = false;
+                }
+              },
+              onLeaveBack: () => {
+                if (!useMobileFrames) return;
+                releaseMobileForwardGate();
+                mobileFinalFrameReadyRef.current = false;
+                // Frame zero is permanently cached. At the absolute top,
+                // reset to it immediately so another forward pass never starts
+                // with a long reverse-render backlog.
+                requestFrameRender(0, { immediate: true });
+              },
             },
           });
 
@@ -534,6 +687,8 @@ export default function HeroScroll() {
         updatePaperLayout(0);
 
         return () => {
+          releaseMobileForwardGate();
+          mobileFinalFrameReadyRef.current = false;
           if (mobileFrameProgressHandlerRef.current === mobileProgressHandler) {
             mobileFrameProgressHandlerRef.current = null;
           }

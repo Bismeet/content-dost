@@ -341,12 +341,12 @@ export default function Navbar() {
               <svg width="100%" height="100%" viewBox="80 95 345 320" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <linearGradient id="navIvoryGrad" x1="246" y1="106" x2="246" y2="406" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#F5F2EB" />
-                    <stop offset="100%" stop-color="#DCD8CD" />
+                    <stop offset="0%" stopColor="#F5F2EB" />
+                    <stop offset="100%" stopColor="#DCD8CD" />
                   </linearGradient>
                   <linearGradient id="navGoldGrad" x1="266" y1="106" x2="266" y2="406" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#FFD066" />
-                    <stop offset="100%" stop-color="#D47A1F" />
+                    <stop offset="0%" stopColor="#FFD066" />
+                    <stop offset="100%" stopColor="#D47A1F" />
                   </linearGradient>
                 </defs>
                 {/* Left Ivory Segment */}

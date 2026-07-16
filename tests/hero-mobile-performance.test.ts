@@ -45,6 +45,22 @@ describe('mobile hero performance safeguards', () => {
     expect(rendererSource).toContain('this.options.onFrameRendered?.(target)');
   });
 
+  it('absorbs forward input while the final mobile frames catch up', () => {
+    expect(heroSource).not.toContain('self.scroll(self.end - 1)');
+    expect(heroSource).toContain('MOBILE_FORWARD_EXIT_GATE_PROGRESS');
+    expect(heroSource).toContain("window.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true })");
+    expect(heroSource).toContain("window.addEventListener('wheel', handleWheel, { passive: false, capture: true })");
+    expect(heroSource).toContain('releaseMobileForwardGate');
+    expect(heroSource).toContain('engageMobileForwardGate(gateY)');
+    expect(heroSource).toContain('lenis?.targetScroll ?? window.scrollY');
+    expect(heroSource).toContain('lenis?.scrollTo(scrollY');
+    expect(heroSource).toContain('lenis?.stop()');
+    expect(heroSource).toContain('getLenisInstance()?.scrollTo(heroEndY');
+    expect(heroSource).toContain("requestFrameRender(MOBILE_FRAME_URLS.length - 1, { holdAsGateTarget: true })");
+    expect(heroSource).toContain("requestFrameRender(0, { immediate: true })");
+    expect(rendererSource).toContain('options: { immediate?: boolean } = {}');
+  });
+
   it('caps large forward and reverse frame jumps without slowing small ones', () => {
     expect(getCappedFrameTarget(10, 80, 2)).toBe(12);
     expect(getCappedFrameTarget(80, 10, 2)).toBe(78);

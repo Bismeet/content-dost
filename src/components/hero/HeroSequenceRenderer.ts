@@ -167,6 +167,7 @@ export class HeroSequenceRenderer {
   private resizeObserver: ResizeObserver | null = null;
   private scheduledRender: number | null = null;
   private renderInFlight = false;
+  private immediateFrame: number | null = null;
   private requestedFrame = FIRST_FRAME;
   private renderedFrame = -1;
   private direction: Direction = 'forward';
@@ -210,9 +211,14 @@ export class HeroSequenceRenderer {
     this.publishDiagnostics();
   }
 
-  requestFrame(index: number) {
+  requestFrame(index: number, options: { immediate?: boolean } = {}) {
     if (this.destroyed) return;
     const clamped = Math.max(FIRST_FRAME, Math.min(this.options.frameUrls.length - 1, index));
+    if (options.immediate) {
+      this.immediateFrame = clamped;
+    } else if (this.immediateFrame !== null && clamped !== this.immediateFrame) {
+      this.immediateFrame = null;
+    }
     const priorRequest = this.requestedFrame;
     this.direction = clamped > priorRequest
       ? 'forward'
@@ -354,11 +360,7 @@ export class HeroSequenceRenderer {
   private async renderRequestedFrame() {
     if (this.renderInFlight) return;
     this.renderInFlight = true;
-    const target = getCappedFrameTarget(
-      this.renderedFrame,
-      this.requestedFrame,
-      this.options.maxFrameStep,
-    );
+    const target = this.getNextRenderTarget();
 
     try {
       if (target === this.renderedFrame) {
@@ -367,11 +369,7 @@ export class HeroSequenceRenderer {
       }
 
       const source = await this.getDecoded(target, -1000);
-      const latestTarget = getCappedFrameTarget(
-        this.renderedFrame,
-        this.requestedFrame,
-        this.options.maxFrameStep,
-      );
+      const latestTarget = this.getNextRenderTarget();
       if (this.destroyed || target !== latestTarget) return;
 
       const switchStartedAt = performance.now();
@@ -387,6 +385,7 @@ export class HeroSequenceRenderer {
         this.fallback.hide();
       }
       this.renderedFrame = target;
+      if (this.immediateFrame === target) this.immediateFrame = null;
       this.options.onFrameRendered?.(target);
       this.textureSwitchTotalMs += performance.now() - switchStartedAt;
       this.textureSwitchCount += 1;
@@ -400,6 +399,17 @@ export class HeroSequenceRenderer {
         this.requestFrame(this.requestedFrame);
       }
     }
+  }
+
+  private getNextRenderTarget() {
+    if (this.immediateFrame !== null && this.requestedFrame === this.immediateFrame) {
+      return this.immediateFrame;
+    }
+    return getCappedFrameTarget(
+      this.renderedFrame,
+      this.requestedFrame,
+      this.options.maxFrameStep,
+    );
   }
 
   private resize() {
