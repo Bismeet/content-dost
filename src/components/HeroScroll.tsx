@@ -100,6 +100,16 @@ const paperBoundsByProgress = [
   },
 ];
 
+// The portrait sequence opens on a shorter sheet than the later caption frames.
+// Keep the opening copy tied to that first-frame paper while the caption overlay
+// continues to use its existing sequence bounds.
+const mobileOpeningPaperBounds = {
+  x: 0.313,
+  y: 0.369,
+  width: 0.403,
+  height: 0.313,
+};
+
 function getInterpolatedBounds(progress: number, isMobile: boolean) {
   if (isMobile) {
     return { x: 0.32, y: 0.28, width: 0.36, height: 0.44 };
@@ -307,16 +317,25 @@ export default function HeroScroll() {
     const offsetY = (viewportHeight - renderedHeight) / 2;
 
     const bounds = getInterpolatedBounds(progress, isMobile);
+    const openingBounds = isMobile ? mobileOpeningPaperBounds : bounds;
 
     const paperLeft = offsetX + bounds.x * renderedWidth;
     const paperTop = offsetY + bounds.y * renderedHeight;
     const paperWidth = bounds.width * renderedWidth;
     const paperHeight = bounds.height * renderedHeight;
+    const openingPaperLeft = offsetX + openingBounds.x * renderedWidth;
+    const openingPaperTop = offsetY + openingBounds.y * renderedHeight;
+    const openingPaperWidth = openingBounds.width * renderedWidth;
+    const openingPaperHeight = openingBounds.height * renderedHeight;
 
     viewport.style.setProperty('--paper-left', `${paperLeft}px`);
     viewport.style.setProperty('--paper-top', `${paperTop}px`);
     viewport.style.setProperty('--paper-width', `${paperWidth}px`);
     viewport.style.setProperty('--paper-height', `${paperHeight}px`);
+    viewport.style.setProperty('--opening-paper-left', `${openingPaperLeft}px`);
+    viewport.style.setProperty('--opening-paper-top', `${openingPaperTop}px`);
+    viewport.style.setProperty('--opening-paper-width', `${openingPaperWidth}px`);
+    viewport.style.setProperty('--opening-paper-height', `${openingPaperHeight}px`);
   };
 
   useEffect(() => {
@@ -768,12 +787,12 @@ export default function HeroScroll() {
                 pointerEvents: 'none'
               }}
             >
-              <div className="hero-opening-copy">
-                <h1>
+              <div className="hero-opening-copy heroMobilePaperCopy">
+                <h1 className="heroMobileHeading">
                   Every strong piece of content
-                  <em>starts as a rough idea.</em>
+                  <em className="heroMobileSerif">starts as a rough idea.</em>
                 </h1>
-                <div className="hero-scroll-cue">Scroll to shape the idea</div>
+                <div className="hero-scroll-cue heroMobileScrollHint">Scroll to shape the idea</div>
               </div>
             </div>
 
