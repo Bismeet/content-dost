@@ -179,10 +179,10 @@ export class HeroSequenceRenderer {
   private textureSwitchTotalMs = 0;
   private textureSwitchCount = 0;
   private readonly isMobile = window.innerWidth < 1025;
-  private readonly concurrentLoads = this.isMobile ? 4 : 6;
-  private readonly decodedLimit = this.isMobile ? 32 : 48;
-  private readonly behindCount = 8;
-  private readonly aheadCount = 16;
+  private readonly concurrentLoads = 8;
+  private readonly decodedLimit = 200;
+  private readonly behindCount = 30;
+  private readonly aheadCount = 40;
 
   constructor(options: HeroSequenceRendererOptions) {
     this.options = options;
@@ -481,7 +481,7 @@ export class HeroSequenceRenderer {
           }
           this.decodedCache.set(task.index, source);
           this.initialLoadedCount += 1;
-          this.options.onLoadingProgress?.(Math.min(100, Math.round((this.initialLoadedCount / 13) * 100)));
+          this.options.onLoadingProgress?.(Math.min(100, Math.round((this.initialLoadedCount / this.options.frameUrls.length) * 100)));
           this.trimDecodedCache();
           this.publishDiagnostics();
           task.resolve(source);
@@ -499,11 +499,11 @@ export class HeroSequenceRenderer {
   }
 
   private primeInitialFrames() {
-    const initialAhead = this.options.decodeSize ? 24 : 11;
-    for (let index = 1; index <= Math.min(initialAhead, this.options.frameUrls.length - 1); index += 1) {
+    const total = this.options.frameUrls.length;
+    for (let index = 0; index < total; index += 1) {
+      if (index === FIRST_FRAME) continue;
       void this.getDecoded(index, index).catch(() => undefined);
     }
-    void this.getDecoded(this.options.frameUrls.length - 1, initialAhead + 1).catch(() => undefined);
   }
 
   private updateDirectionalCache(currentFrame: number) {
@@ -529,33 +529,9 @@ export class HeroSequenceRenderer {
     this.trimDecodedCache();
   }
 
-  private pruneQueuedFrames(minimum: number, maximum: number, currentFrame: number) {
-    const finalFrame = this.options.frameUrls.length - 1;
-    
-    // 1. Prune pending tasks in the queue
-    for (let index = this.queue.length - 1; index >= 0; index -= 1) {
-      const task = this.queue[index];
-      if (
-        task.index === currentFrame
-        || task.index === FIRST_FRAME
-        || task.index === finalFrame
-        || (task.index >= minimum && task.index <= maximum)
-      ) continue;
-      this.queue.splice(index, 1);
-      this.loading.delete(task.index);
-      task.reject(new DOMException('Frame left the active preload window', 'AbortError'));
-    }
-
-    // 2. Abort active downloads that are no longer in the active window
-    for (const [index, controller] of this.activeAbortControllers) {
-      if (
-        index === currentFrame
-        || index === FIRST_FRAME
-        || index === finalFrame
-        || (index >= minimum && index <= maximum)
-      ) continue;
-      controller.abort();
-    }
+  private pruneQueuedFrames(_minimum: number, _maximum: number, _currentFrame: number) {
+    // Keep all preloaded frames in memory
+    return;
   }
 
   private trimGpuCache(minimum: number, maximum: number) {

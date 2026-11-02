@@ -16,7 +16,7 @@ const MOBILE_FRAME_COUNT = 140;
 const MOBILE_BASE_PATH = '/hero-sequence-mobile/';
 const MOBILE_FRAME_URLS = Array.from(
   { length: MOBILE_FRAME_COUNT },
-  (_, i) => `${MOBILE_BASE_PATH}ezgif-frame-${String(i + 1).padStart(3, '0')}.jpg`
+  (_, i) => `${MOBILE_BASE_PATH}ezgif-frame-${String(i + 1).padStart(3, '0')}.webp`
 );
 
 const DESKTOP_HERO_SCROLL_MULTIPLIER = 2.2;
